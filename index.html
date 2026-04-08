@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Visibility RADAR v2 — Brand Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020b14;--bg2:#041020;--panel:rgba(6,20,40,0.85);--panel2:rgba(8,26,52,0.9);--cyan:#00e5ff;--cyan2:#00b8d4;--cyan-dim:rgba(0,229,255,0.08);--cyan-glow:rgba(0,229,255,0.25);--green:#00ff9d;--green-dim:rgba(0,255,157,0.08);--amber:#ffb300;--red:#ff3d5a;--purple:#b388ff;--text:#c8e8f8;--text2:#5a8aaa;--text3:#2a4a6a;--border:rgba(0,229,255,0.12);--border2:rgba(0,229,255,0.25);--mono:'Share Tech Mono',monospace;--ui:'Rajdhani',sans-serif;--display:'Orbitron',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--ui);font-size:14px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,80,140,0.18) 0%,transparent 65%);pointer-events:none;z-index:0}
+.scanlines{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:1000}
+
+/* NAV */
+#nav{position:sticky;top:0;z-index:200;background:rgba(2,11,20,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.nav-left{display:flex;align-items:center;gap:14px}
+.radar-icon{width:34px;height:34px;border:1.5px solid var(--cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0}
+.radar-icon::before{content:'';position:absolute;top:50%;left:50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent 0deg,rgba(0,229,255,0.5) 18deg,transparent 18deg);transform-origin:0 0;animation:rspin 3s linear infinite}
+@keyframes rspin{to{transform:rotate(360deg)}}
+.radar-icon::after{content:'⊕';font-size:13px;color:var(--cyan);z-index:1;font-family:var(--mono)}
+.brand-name{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:3px;color:#fff}
+.brand-name span{color:var(--cyan)}
+.nav-div{width:1px;height:26px;background:var(--border)}
+.nav-tag{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1.5px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.status-badge{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;padding:4px 12px;border-radius:2px;border:1px solid}
+.badge-ready{color:var(--cyan);border-color:var(--border2);background:var(--cyan-dim)}
+.badge-live{color:var(--green);border-color:rgba(0,255,157,0.3);background:var(--green-dim)}
+.badge-scanning{color:var(--amber);border-color:rgba(255,179,0,0.3);background:rgba(255,179,0,0.08)}
+.v-tag{font-family:var(--mono);font-size:9px;color:var(--amber);border:1px solid rgba(255,179,0,0.3);background:rgba(255,179,0,0.07);padding:3px 8px;border-radius:2px;letter-spacing:1px}
+.blink{animation:blink .8s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* SETUP */
+#setup-screen{position:relative;z-index:1;min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.setup-wrap{width:100%;max-width:760px}
+.setup-hero{text-align:center;margin-bottom:40px}
+.setup-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:12px;opacity:0;animation:fadeUp .6s ease .2s forwards}
+.setup-title{font-family:var(--display);font-size:clamp(26px,4.5vw,46px);font-weight:900;line-height:1.1;letter-spacing:2px;color:#fff;margin-bottom:12px;opacity:0;animation:fadeUp .6s ease .4s forwards}
+.t-cyan{color:var(--cyan)}
+.setup-desc{font-size:15px;color:var(--text2);line-height:1.6;max-width:500px;margin:0 auto;opacity:0;animation:fadeUp .6s ease .6s forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.radar-canvas-wrap{display:flex;justify-content:center;margin-bottom:32px;opacity:0;animation:fadeUp .8s ease .3s forwards}
+.setup-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:32px 38px;position:relative;overflow:hidden;opacity:0;animation:fadeUp .6s ease .8s forwards}
+.setup-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.corner{position:absolute;width:14px;height:14px;border-color:var(--cyan2);border-style:solid;border-width:0}
+.c-tl{top:8px;left:8px;border-top-width:1.5px;border-left-width:1.5px}
+.c-tr{top:8px;right:8px;border-top-width:1.5px;border-right-width:1.5px}
+.c-bl{bottom:8px;left:8px;border-bottom-width:1.5px;border-left-width:1.5px}
+.c-br{bottom:8px;right:8px;border-bottom-width:1.5px;border-right-width:1.5px}
+.panel-title{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:10px}
+.panel-title::before{content:'';width:20px;height:1px;background:var(--cyan)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-row{display:flex;flex-direction:column;gap:5px}
+.form-row.full{grid-column:1/-1}
+.form-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase}
+.form-input{background:rgba(0,229,255,0.04);border:1px solid var(--border);border-radius:2px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 14px;outline:none;transition:all .2s;letter-spacing:.5px;width:100%}
+.form-input:focus{border-color:var(--cyan2);background:rgba(0,229,255,0.07);box-shadow:0 0 0 3px rgba(0,229,255,0.08)}
+.form-input::placeholder{color:var(--text3)}
+.form-hint{font-size:10px;color:var(--text3);font-family:var(--mono)}
+
+/* MODEL SELECTOR */
+.model-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.model-opt{display:none}
+.model-label{display:flex;flex-direction:column;align-items:center;padding:10px 8px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .15s;background:rgba(0,229,255,0.02);text-align:center;gap:4px}
+.model-label:hover{border-color:var(--border2);background:var(--cyan-dim)}
+.model-opt:checked+.model-label{border-color:var(--cyan);background:rgba(0,229,255,0.1);box-shadow:0 0 12px rgba(0,229,255,0.1)}
+.model-name{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text)}
+.model-opt:checked+.model-label .model-name{color:var(--cyan)}
+.model-desc{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:.3px}
+.model-speed{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;margin-top:2px}
+.spd-fast{background:rgba(0,255,157,0.1);color:var(--green);border:1px solid rgba(0,255,157,0.2)}
+.spd-med{background:rgba(255,179,0,0.1);color:var(--amber);border:1px solid rgba(255,179,0,0.2)}
+.spd-slow{background:rgba(255,61,90,0.1);color:var(--red);border:1px solid rgba(255,61,90,0.2)}
+
+/* KEYWORD MODE */
+.kw-toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kw-opt{display:none}
+.kw-label{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .15s;background:rgba(0,229,255,0.02)}
+.kw-label:hover{border-color:var(--border2)}
+.kw-opt:checked+.kw-label{border-color:var(--cyan);background:rgba(0,229,255,0.08)}
+.kw-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.kw-info{}
+.kw-name{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text);margin-bottom:3px}
+.kw-opt:checked+.kw-label .kw-name{color:var(--cyan)}
+.kw-desc{font-family:var(--mono);font-size:10px;color:var(--text2);line-height:1.5}
+
+/* MIXED MODE extras */
+.mix-info{font-family:var(--mono);font-size:10px;color:var(--text2);padding:8px 12px;background:rgba(0,229,255,0.04);border:1px solid var(--border);border-radius:2px;margin-top:6px;display:none}
+.mix-info.show{display:block}
+
+.launch-btn{width:100%;padding:15px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;cursor:pointer;border-radius:2px;position:relative;overflow:hidden;transition:all .2s;margin-top:4px}
+.launch-btn::before{content:'';position:absolute;inset:0;background:var(--cyan);transform:translateX(-100%);transition:transform .3s ease;z-index:0}
+.launch-btn:hover{color:var(--bg);box-shadow:0 0 30px var(--cyan-glow)}
+.launch-btn:hover::before{transform:translateX(0)}
+.launch-btn span{position:relative;z-index:1}
+.launch-btn:disabled{opacity:.4;cursor:not-allowed}
+.launch-btn:disabled:hover::before{transform:translateX(-100%)}
+.launch-btn:disabled:hover{color:var(--cyan);box-shadow:none}
+
+/* PROGRESS */
+#progress-screen{display:none;position:relative;z-index:1;min-height:calc(100vh - 58px);align-items:center;justify-content:center;flex-direction:column;padding:40px 24px}
+.prog-wrap{width:100%;max-width:560px;text-align:center}
+.prog-radar{margin:0 auto 32px;width:180px;height:180px}
+.prog-title{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:3px;color:#fff;margin-bottom:5px}
+.prog-sub{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:24px;min-height:18px}
+.prog-track{height:3px;background:var(--border);border-radius:2px;margin-bottom:8px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--cyan2),var(--cyan));border-radius:2px;width:0%;transition:width .5s ease;box-shadow:0 0 10px var(--cyan)}
+.prog-counter{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:20px}
+.prog-log{background:rgba(0,229,255,0.03);border:1px solid var(--border);border-radius:2px;padding:14px;text-align:left;max-height:200px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.9;color:var(--text2)}
+.prog-log::-webkit-scrollbar{width:2px}
+.prog-log::-webkit-scrollbar-thumb{background:var(--border)}
+.log-line{display:flex;gap:8px;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.log-pfx{color:var(--cyan);flex-shrink:0}
+.log-done{color:var(--green)}
+.log-active{color:var(--amber)}
+
+/* DASHBOARD */
+#dashboard{display:none;position:relative;z-index:1}
+.dash-header{background:rgba(2,11,20,0.92);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;backdrop-filter:blur(10px);position:sticky;top:58px;z-index:100}
+.dash-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;margin-bottom:2px}
+.dash-brand{font-family:var(--display);font-size:20px;font-weight:900;letter-spacing:2px;color:#fff}
+.dash-brand span{color:var(--cyan)}
+.dash-meta{display:flex;gap:18px;font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;flex-wrap:wrap}
+.dash-mi{display:flex;flex-direction:column;gap:2px}
+.dash-mv{color:var(--text);font-size:12px}
+.dash-mv.model-highlight{color:var(--amber)}
+.rerun-btn{padding:7px 16px;background:transparent;border:1px solid var(--border2);color:var(--cyan);font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .2s}
+.rerun-btn:hover{background:var(--cyan-dim);box-shadow:0 0 15px var(--cyan-glow)}
+.dash-body{padding:24px 32px;max-width:1400px;margin:0 auto}
+
+/* TABS */
+.tabs-wrap{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab-btn{padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s;margin-bottom:-1px}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.sec-head{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--cyan2);text-transform:uppercase;margin-bottom:13px;display:flex;align-items:center;gap:10px}
+.sec-head::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi-card{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:18px 20px;position:relative;overflow:hidden;opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s,box-shadow .2s}
+.kpi-card.vis{opacity:1;transform:translateY(0)}
+.kpi-card:hover{box-shadow:0 0 25px rgba(0,229,255,0.1);border-color:var(--border2)}
+.kpi-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.kc1::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.kc2::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.kc3::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.kc4::before{background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+.kpi-glow{position:absolute;bottom:-30px;right:-30px;width:100px;height:100px;border-radius:50%;opacity:.06;filter:blur(20px)}
+.kpi-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.kpi-lbl::before{content:'';width:4px;height:4px;border-radius:50%}
+.kc1 .kpi-lbl::before{background:var(--cyan)}
+.kc2 .kpi-lbl::before{background:var(--green)}
+.kc3 .kpi-lbl::before{background:var(--amber)}
+.kc4 .kpi-lbl::before{background:var(--purple)}
+.kpi-val{font-family:var(--display);font-size:34px;font-weight:900;line-height:1;margin-bottom:4px;letter-spacing:-1px}
+.kc1 .kpi-val{color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,0.35)}
+.kc2 .kpi-val{color:var(--green);text-shadow:0 0 20px rgba(0,255,157,0.25)}
+.kc3 .kpi-val{color:var(--amber);text-shadow:0 0 20px rgba(255,179,0,0.25)}
+.kc4 .kpi-val{color:var(--purple);text-shadow:0 0 20px rgba(179,136,255,0.25)}
+.kpi-sub{font-size:11px;color:var(--text2);font-family:var(--mono)}
+
+/* CHARTS */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.chart-card{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:18px;position:relative;overflow:hidden;opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s}
+.chart-card.vis{opacity:1;transform:translateY(0)}
+.chart-card.full{grid-column:1/-1}
+.chart-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
+.ct{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--cyan2);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+
+/* SOV */
+.sov-item{margin-bottom:11px}
+.sov-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sov-brand{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px;font-family:var(--ui)}
+.sov-num{font-family:var(--display);font-size:13px;font-weight:700}
+.sov-track{height:7px;background:rgba(255,255,255,0.04);border-radius:1px;overflow:hidden}
+.sov-fill{height:100%;border-radius:1px;width:0;transition:width 1.2s cubic-bezier(.16,1,.3,1);position:relative}
+.sov-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:rgba(255,255,255,0.4);filter:blur(1px)}
+.b-pip{width:8px;height:8px;border-radius:1px;flex-shrink:0}
+
+/* SENTIMENT */
+.sent-item{margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.sent-name{font-size:12px;color:var(--text);width:110px;flex-shrink:0;font-family:var(--ui);font-weight:600}
+.sent-track{flex:1;height:20px;display:flex;border-radius:2px;overflow:hidden;gap:1px}
+.sent-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;transition:width 1s ease}
+.ss-pos{background:rgba(0,255,157,0.18);color:var(--green);border:1px solid rgba(0,255,157,0.25)}
+.ss-neu{background:rgba(90,138,170,0.12);color:var(--text2);border:1px solid rgba(90,138,170,0.18)}
+.ss-neg{background:rgba(255,61,90,0.14);color:var(--red);border:1px solid rgba(255,61,90,0.22)}
+
+/* CATEGORY */
+.cat-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s}
+.cat-item.vis{opacity:1;transform:translateX(0)}
+.cat-item:last-child{border-bottom:none}
+.cat-left{display:flex;align-items:center;gap:12px}
+.cat-icon{width:30px;height:30px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px}
+.cat-nm{font-size:13px;font-weight:600;color:var(--text)}
+.cat-ns{font-family:var(--mono);font-size:9px;color:var(--text2)}
+.cat-right{display:flex;gap:20px;align-items:center}
+.cat-m{text-align:center}
+.cat-mv{font-family:var(--display);font-size:15px;font-weight:700}
+.cat-ml{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase}
+
+/* KEYWORD MODE BADGE on results */
+.kw-mode-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:3px 10px;border-radius:2px;border:1px solid}
+.kw-branded{color:var(--cyan);border-color:var(--border2);background:var(--cyan-dim)}
+.kw-nonbranded{color:var(--green);border-color:rgba(0,255,157,0.25);background:var(--green-dim)}
+.kw-mixed{color:var(--amber);border-color:rgba(255,179,0,0.25);background:rgba(255,179,0,0.07)}
+
+/* HEATMAP */
+.heat-wrap{overflow-x:auto}
+.heat-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.heat-table th{padding:7px 10px;color:var(--text2);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
+.heat-table th:first-child{text-align:left}
+.heat-table td{padding:7px 10px;border-bottom:1px solid rgba(0,229,255,0.04);text-align:center}
+.heat-table td:first-child{text-align:left;color:var(--text2);font-size:11px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heat-table td:nth-child(2){text-align:left}
+.heat-table tr:hover td{background:rgba(0,229,255,0.03)}
+.h-yes{display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;background:rgba(0,255,157,0.14);color:var(--green);border:1px solid rgba(0,255,157,0.28);border-radius:2px;font-size:10px;font-weight:700}
+.h-no{display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:2px;font-size:10px}
+
+/* PROMPTS TABLE */
+.p-table{width:100%;border-collapse:collapse;font-size:13px}
+.p-table th{padding:10px 14px;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left;background:rgba(0,229,255,0.02)}
+.p-table td{padding:10px 14px;border-bottom:1px solid rgba(0,229,255,0.05);vertical-align:middle}
+.p-table tr:hover td{background:rgba(0,229,255,0.03)}
+.p-table tr{opacity:0}
+.p-table tr.rin{animation:rowIn .3s ease forwards}
+@keyframes rowIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:2px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.5px}
+.ch-yes{background:rgba(0,255,157,0.12);color:var(--green);border:1px solid rgba(0,255,157,0.25)}
+.ch-no{background:rgba(255,255,255,0.04);color:var(--text3);border:1px solid var(--border)}
+.ch-pos{background:rgba(0,255,157,0.1);color:var(--green);border:1px solid rgba(0,255,157,0.2)}
+.ch-neg{background:rgba(255,61,90,0.1);color:var(--red);border:1px solid rgba(255,61,90,0.2)}
+.ch-neu{background:rgba(90,138,170,0.1);color:var(--text2);border:1px solid var(--border)}
+.ch-rank{background:rgba(179,136,255,0.1);color:var(--purple);border:1px solid rgba(179,136,255,0.2)}
+.ch-cat{background:rgba(0,229,255,0.06);color:var(--cyan2);border:1px solid var(--border);font-size:9px}
+.ch-nb{background:rgba(0,255,157,0.06);color:var(--green);border:1px solid rgba(0,255,157,0.15);font-size:9px}
+.fsel{background:var(--panel2);border:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;outline:none;cursor:pointer}
+.fsel:focus{border-color:var(--cyan2);color:var(--text)}
+
+/* SOURCES */
+.src-item{background:var(--panel);border:1px solid var(--border);border-radius:3px;margin-bottom:14px;overflow:hidden;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s}
+.src-item.vis{opacity:1;transform:translateY(0)}
+.src-item:hover{border-color:var(--border2)}
+.src-head{padding:12px 16px;background:rgba(0,229,255,0.03);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.src-q{font-size:13px;font-weight:600;color:var(--text);flex:1;min-width:200px;font-family:var(--ui)}
+.src-chips{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.src-body{padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text2);border-left:2px solid var(--border);margin:12px 16px}
+.hl-b{background:rgba(0,229,255,0.14);color:var(--cyan);border-radius:2px;padding:1px 4px}
+.hl-c{background:rgba(179,136,255,0.12);color:var(--purple);border-radius:2px;padding:1px 4px}
+.src-foot{padding:6px 16px 12px;display:flex;gap:12px;font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.5px;flex-wrap:wrap}
+
+@media(max-width:960px){.kpi-grid{grid-template-columns:1fr 1fr}.charts-row{grid-template-columns:1fr}.dash-body{padding:16px}.model-grid{grid-template-columns:1fr 1fr}.dash-header{padding:12px 16px;top:58px}#nav{padding:0 16px}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.setup-panel{padding:20px 16px}.kw-toggle-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<nav id="nav">
+  <div class="nav-left">
+    <div class="radar-icon"></div>
+    <div class="brand-name">AI VISIBILITY <span>RADAR</span></div>
+    <div class="nav-div"></div>
+    <div class="nav-tag">BRAND INTELLIGENCE PLATFORM</div>
+  </div>
+  <div class="nav-right">
+    <span class="v-tag">v2.0</span>
+    <div class="status-badge badge-ready" id="nav-badge"><span class="blink">◆</span>&nbsp;SYSTEM READY</div>
+  </div>
+</nav>
+
+<!-- SETUP -->
+<div id="setup-screen">
+  <div class="setup-wrap">
+    <div class="setup-hero">
+      <div class="setup-eyebrow">// AI Answer Engine Optimisation · v2.0</div>
+      <div class="setup-title">TRACK YOUR BRAND<br><span class="t-cyan">ACROSS AI ANSWERS</span></div>
+      <div class="setup-desc">Run live prompts through any GPT model. Track branded and non-branded visibility. See exactly where you stand against competitors.</div>
+    </div>
+    <div class="radar-canvas-wrap"><canvas id="setup-radar" width="180" height="180"></canvas></div>
+    <div class="setup-panel">
+      <div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>
+      <div class="panel-title">Configure Scan Parameters</div>
+      <div class="form-grid">
+
+        <!-- Brand + Industry -->
+        <div class="form-row">
+          <label class="form-label">Your Brand</label>
+          <input class="form-input" id="inp-brand" type="text" placeholder="e.g. Shiprocket">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Industry / Category</label>
+          <input class="form-input" id="inp-industry" type="text" placeholder="e.g. ecommerce logistics">
+        </div>
+
+        <!-- Competitors -->
+        <div class="form-row full">
+          <label class="form-label">Competitors <span style="color:var(--text3)">(comma separated, up to 5)</span></label>
+          <input class="form-input" id="inp-competitors" type="text" placeholder="e.g. Delhivery, BlueDart, Ecom Express">
+        </div>
+
+        <!-- GPT Model selector -->
+        <div class="form-row full">
+          <label class="form-label" style="margin-bottom:8px">GPT Model</label>
+          <div class="model-grid">
+            <div>
+              <input type="radio" name="model" id="m-4o" value="gpt-4o" class="model-opt" checked>
+              <label for="m-4o" class="model-label">
+                <div class="model-name">GPT-4o</div>
+                <div class="model-desc">Best quality</div>
+                <div class="model-speed spd-med">BALANCED</div>
+              </label>
+            </div>
+            <div>
+              <input type="radio" name="model" id="m-4o-mini" value="gpt-4o-mini" class="model-opt">
+              <label for="m-4o-mini" class="model-label">
+                <div class="model-name">4o-mini</div>
+                <div class="model-desc">Fast & cheap</div>
+                <div class="model-speed spd-fast">FASTEST</div>
+              </label>
+            </div>
+            <div>
+              <input type="radio" name="model" id="m-4t" value="gpt-4-turbo" class="model-opt">
+              <label for="m-4t" class="model-label">
+                <div class="model-name">GPT-4T</div>
+                <div class="model-desc">GPT-4 Turbo</div>
+                <div class="model-speed spd-med">DETAILED</div>
+              </label>
+            </div>
+            <div>
+              <input type="radio" name="model" id="m-35" value="gpt-3.5-turbo" class="model-opt">
+              <label for="m-35" class="model-label">
+                <div class="model-name">GPT-3.5</div>
+                <div class="model-desc">Most affordable</div>
+                <div class="model-speed spd-fast">BUDGET</div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Keyword mode -->
+        <div class="form-row full">
+          <label class="form-label" style="margin-bottom:8px">Keyword / Prompt Mode</label>
+          <div class="kw-toggle-row">
+            <div>
+              <input type="radio" name="kwmode" id="kw-branded" value="branded" class="kw-opt">
+              <label for="kw-branded" class="kw-label">
+                <div class="kw-icon">🎯</div>
+                <div class="kw-info">
+                  <div class="kw-name">Branded</div>
+                  <div class="kw-desc">Prompts directly mention your brand — comparisons, features, pricing. Measures brand-specific AI visibility.</div>
+                </div>
+              </label>
+            </div>
+            <div>
+              <input type="radio" name="kwmode" id="kw-nonbranded" value="nonbranded" class="kw-opt">
+              <label for="kw-nonbranded" class="kw-label">
+                <div class="kw-icon">🌐</div>
+                <div class="kw-info">
+                  <div class="kw-name">Non-branded</div>
+                  <div class="kw-desc">Generic category prompts only — "best logistics platform", "top shipping tools". Measures organic category presence.</div>
+                </div>
+              </label>
+            </div>
+            <div>
+              <input type="radio" name="kwmode" id="kw-mixed" value="mixed" class="kw-opt" checked>
+              <label for="kw-mixed" class="kw-label">
+                <div class="kw-icon">⚡</div>
+                <div class="kw-info">
+                  <div class="kw-name">Mixed (recommended)</div>
+                  <div class="kw-desc">50/50 split of branded and non-branded. Gives a balanced view of both direct and category-level AI presence.</div>
+                </div>
+              </label>
+            </div>
+            <div>
+              <input type="radio" name="kwmode" id="kw-custom" value="custom" class="kw-opt">
+              <label for="kw-custom" class="kw-label">
+                <div class="kw-icon">✏️</div>
+                <div class="kw-info">
+                  <div class="kw-name">Custom prompts</div>
+                  <div class="kw-desc">Write your own prompts. One per line. Full control over what gets tested.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="mix-info" id="mix-info">// Mixed mode: prompts are split ~50% branded (mention your brand) and ~50% non-branded (generic category queries)</div>
+        </div>
+
+        <!-- Custom prompts textarea (shown only when custom selected) -->
+        <div class="form-row full" id="custom-prompts-row" style="display:none">
+          <label class="form-label">Your Custom Prompts <span style="color:var(--text3)">(one per line)</span></label>
+          <textarea class="form-input" id="inp-custom" rows="6" placeholder="What is the best shipping platform in India?&#10;Compare Shiprocket and Delhivery&#10;Which logistics API should I integrate?" style="resize:vertical;line-height:1.7"></textarea>
+          <div class="form-hint">// Enter between 5 and 30 prompts for best results</div>
+        </div>
+
+        <!-- Prompt count (hidden for custom) -->
+        <div class="form-row" id="prompt-count-row">
+          <label class="form-label">Prompts to Run</label>
+          <select class="form-input" id="inp-prompts">
+            <option value="10">10 — Quick scan (~30s)</option>
+            <option value="20" selected>20 — Standard (~60s)</option>
+            <option value="30">30 — Deep scan (~90s)</option>
+          </select>
+        </div>
+
+        <div class="form-row full">
+          <button class="launch-btn" id="launch-btn" onclick="startAnalysis()">
+            <span>⚡ INITIATE RADAR SCAN</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div id="progress-screen">
+  <div class="prog-wrap">
+    <div class="prog-radar"><canvas id="prog-radar" width="180" height="180"></canvas></div>
+    <div class="prog-title">SCANNING AIRSPACE</div>
+    <div class="prog-sub" id="prog-sub">INITIALISING RADAR SYSTEMS…</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-bar"></div></div>
+    <div class="prog-counter"><span id="prog-count">0 / 0 prompts</span><span id="prog-pct">0%</span></div>
+    <div class="prog-log" id="prog-log"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="dash-header">
+    <div><div class="dash-lbl">// RADAR REPORT v2.0</div><div class="dash-brand" id="dash-brand">BRAND <span>INTELLIGENCE</span></div></div>
+    <div class="dash-meta">
+      <div class="dash-mi"><span>PROMPTS</span><span class="dash-mv" id="meta-prompts">—</span></div>
+      <div class="dash-mi"><span>MODEL</span><span class="dash-mv model-highlight" id="meta-model">—</span></div>
+      <div class="dash-mi"><span>MODE</span><span class="dash-mv" id="meta-mode">—</span></div>
+      <div class="dash-mi"><span>SCANNED</span><span class="dash-mv" id="meta-date">—</span></div>
+    </div>
+    <button class="rerun-btn" onclick="resetToSetup()">↺ NEW SCAN</button>
+  </div>
+  <div class="dash-body">
+    <div class="tabs-wrap">
+      <button class="tab-btn active" onclick="showTab('overview')">OVERVIEW</button>
+      <button class="tab-btn" onclick="showTab('competitors')">COMPETITORS</button>
+      <button class="tab-btn" onclick="showTab('prompts')">ALL PROMPTS</button>
+      <button class="tab-btn" onclick="showTab('sources')">SOURCES</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="sec-head">Key Performance Indicators</div>
+      <div class="kpi-grid">
+        <div class="kpi-card kc1"><div class="kpi-glow" style="background:var(--cyan)"></div><div class="kpi-lbl">Mention Rate</div><div class="kpi-val" id="kpi-mention">—</div><div class="kpi-sub">of prompts include your brand</div></div>
+        <div class="kpi-card kc2"><div class="kpi-glow" style="background:var(--green)"></div><div class="kpi-lbl">Share of Voice</div><div class="kpi-val" id="kpi-sov">—</div><div class="kpi-sub">vs all tracked brands</div></div>
+        <div class="kpi-card kc3"><div class="kpi-glow" style="background:var(--amber)"></div><div class="kpi-lbl">Positive Sentiment</div><div class="kpi-val" id="kpi-pos">—</div><div class="kpi-sub">of your mentions</div></div>
+        <div class="kpi-card kc4"><div class="kpi-glow" style="background:var(--purple)"></div><div class="kpi-lbl">Avg Rank Position</div><div class="kpi-val" id="kpi-rank">—</div><div class="kpi-sub">when mentioned (lower = better)</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card"><div class="ct">Share of Voice</div><div id="sov-chart"></div></div>
+        <div class="chart-card"><div class="ct">Sentiment Distribution</div><div id="sent-chart"></div></div>
+      </div>
+      <div class="chart-card full" style="margin-bottom:18px">
+        <div class="ct">
+          Performance by Category
+          <div id="kw-mode-indicator"></div>
+        </div>
+        <div id="cat-chart"></div>
+      </div>
+    </div>
+
+    <!-- COMPETITORS -->
+    <div class="tab-panel" id="tab-competitors">
+      <div class="chart-card full" style="margin-bottom:16px"><div class="ct">Brand Mention Heatmap</div><div class="heat-wrap"><table class="heat-table" id="heat-table"></table></div></div>
+      <div class="charts-row">
+        <div class="chart-card"><div class="ct">Mention Count</div><div id="comp-cnt"></div></div>
+        <div class="chart-card"><div class="ct">Sentiment Comparison</div><div id="comp-sent"></div></div>
+      </div>
+    </div>
+
+    <!-- PROMPTS -->
+    <div class="tab-panel" id="tab-prompts">
+      <div class="chart-card full">
+        <div class="ct">All Prompts
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="fsel" id="f-cat" onchange="filterPrompts()"><option value="all">All categories</option><option value="Awareness">Awareness</option><option value="Comparison">Comparison</option><option value="Recommendation">Recommendation</option><option value="Features">Features</option><option value="Pricing">Pricing</option><option value="Custom">Custom</option></select>
+            <select class="fsel" id="f-kwtype" onchange="filterPrompts()"><option value="all">All prompt types</option><option value="branded">Branded only</option><option value="nonbranded">Non-branded only</option></select>
+            <select class="fsel" id="f-mention" onchange="filterPrompts()"><option value="all">All results</option><option value="yes">Mentioned</option><option value="no">Not mentioned</option></select>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="p-table"><thead><tr><th style="width:32%">Prompt</th><th>Type</th><th>Category</th><th id="brand-th">Brand</th><th>Sentiment</th><th>Rank</th><th>Others</th></tr></thead><tbody id="p-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="tab-panel" id="tab-sources">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div><div style="font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:2px;color:var(--text);margin-bottom:3px">RAW AI RESPONSES</div><div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px">Brand in <span style="color:var(--cyan)">cyan</span> · Competitors in <span style="color:var(--purple)">purple</span></div></div>
+        <div style="display:flex;gap:8px">
+          <select class="fsel" id="f-src-type" onchange="filterSources()"><option value="all">All types</option><option value="branded">Branded</option><option value="nonbranded">Non-branded</option></select>
+          <select class="fsel" id="f-src-cat" onchange="filterSources()"><option value="all">All categories</option><option value="Awareness">Awareness</option><option value="Comparison">Comparison</option><option value="Recommendation">Recommendation</option><option value="Features">Features</option><option value="Pricing">Pricing</option></select>
+        </div>
+      </div>
+      <div id="sources-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// RADAR CANVAS
+function drawRadar(id,size){
+  const c=document.getElementById(id);if(!c)return;
+  const ctx=c.getContext('2d'),cx=size/2,cy=size/2,r=size/2-6;
+  let a=0;
+  function fr(){
+    ctx.clearRect(0,0,size,size);
+    [.25,.5,.75,1].forEach(f=>{ctx.beginPath();ctx.arc(cx,cy,r*f,0,Math.PI*2);ctx.strokeStyle=`rgba(0,229,255,${f===1?.2:.07})`;ctx.lineWidth=f===1?1.5:.5;ctx.stroke();});
+    ctx.strokeStyle='rgba(0,229,255,0.05)';ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(a);
+    const sw=ctx.createLinearGradient(0,0,r,0);sw.addColorStop(0,'rgba(0,229,255,0)');sw.addColorStop(1,'rgba(0,229,255,0.32)');
+    ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r,-.32,.32);ctx.closePath();ctx.fillStyle=sw;ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(r,0);ctx.strokeStyle='rgba(0,229,255,0.8)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.restore();
+    ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fillStyle='rgba(0,229,255,0.9)';ctx.fill();
+    a+=0.04;requestAnimationFrame(fr);
+  }
+  fr();
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  drawRadar('setup-radar',180);
+  // Show/hide custom prompts & mix info
+  document.querySelectorAll('input[name="kwmode"]').forEach(r=>{
+    r.addEventListener('change',()=>{
+      const v=document.querySelector('input[name="kwmode"]:checked').value;
+      document.getElementById('custom-prompts-row').style.display=v==='custom'?'flex':'none';
+      document.getElementById('prompt-count-row').style.display=v==='custom'?'none':'flex';
+      document.getElementById('mix-info').classList.toggle('show',v==='mixed');
+    });
+  });
+});
+
+// STATE
+let results=[],config={};
+const COLS=['#00e5ff','#00ff9d','#ffb300','#ff3d5a','#b388ff','#ff6d00','#00e676'];
+
+// PROMPTS GENERATOR
+function generatePrompts(brand,industry,competitors,count,mode){
+  const c0=competitors[0]||'competitors',c1=competitors[1]||c0,ca=competitors.slice(0,4).join(', ')||'alternatives';
+
+  const branded=[
+    {cat:'Comparison',p:`Compare ${brand} vs ${c0} for ${industry}`,kwtype:'branded'},
+    {cat:'Comparison',p:`What is the difference between ${brand} and ${c0}?`,kwtype:'branded'},
+    {cat:'Comparison',p:`Which is better: ${brand} or ${c1} for a growing business?`,kwtype:'branded'},
+    {cat:'Comparison',p:`${brand} vs ${ca} — which should I choose?`,kwtype:'branded'},
+    {cat:'Comparison',p:`${brand} alternatives — what are my options?`,kwtype:'branded'},
+    {cat:'Features',p:`What features does ${brand} offer?`,kwtype:'branded'},
+    {cat:'Features',p:`What makes ${brand} stand out in ${industry}?`,kwtype:'branded'},
+    {cat:'Features',p:`What are the key capabilities of ${brand}?`,kwtype:'branded'},
+    {cat:'Features',p:`How does ${brand}'s technology work?`,kwtype:'branded'},
+    {cat:'Features',p:`Does ${brand} support COD and returns management?`,kwtype:'branded'},
+    {cat:'Features',p:`What integrations does ${brand} support?`,kwtype:'branded'},
+    {cat:'Pricing',p:`How much does ${brand} cost?`,kwtype:'branded'},
+    {cat:'Pricing',p:`Is ${brand} affordable for small businesses?`,kwtype:'branded'},
+    {cat:'Pricing',p:`What is the pricing model of ${brand} vs ${c0}?`,kwtype:'branded'},
+    {cat:'Pricing',p:`What are the fees charged by ${brand}?`,kwtype:'branded'},
+    {cat:'Awareness',p:`What do people say about ${brand}?`,kwtype:'branded'},
+    {cat:'Awareness',p:`What is ${brand} known for in ${industry}?`,kwtype:'branded'},
+    {cat:'Recommendation',p:`Is ${brand} good for D2C brands?`,kwtype:'branded'},
+    {cat:'Recommendation',p:`How does ${brand} help small businesses?`,kwtype:'branded'},
+  ];
+
+  const nonbranded=[
+    {cat:'Awareness',p:`What are the best ${industry} companies in India?`,kwtype:'nonbranded'},
+    {cat:'Awareness',p:`Which ${industry} platforms are most popular right now?`,kwtype:'nonbranded'},
+    {cat:'Awareness',p:`Tell me about the leading players in the ${industry} space`,kwtype:'nonbranded'},
+    {cat:'Awareness',p:`Who are the top ${industry} startups to watch?`,kwtype:'nonbranded'},
+    {cat:'Awareness',p:`What are the most trusted ${industry} brands?`,kwtype:'nonbranded'},
+    {cat:'Awareness',p:`Which ${industry} companies have the best reviews?`,kwtype:'nonbranded'},
+    {cat:'Recommendation',p:`I'm looking for a good ${industry} solution, what do you recommend?`,kwtype:'nonbranded'},
+    {cat:'Recommendation',p:`What ${industry} platform should a small business use?`,kwtype:'nonbranded'},
+    {cat:'Recommendation',p:`Recommend the best ${industry} tools for an ecommerce store`,kwtype:'nonbranded'},
+    {cat:'Recommendation',p:`I need a reliable ${industry} partner — suggestions?`,kwtype:'nonbranded'},
+    {cat:'Recommendation',p:`Best ${industry} platform for fast delivery in India?`,kwtype:'nonbranded'},
+    {cat:'Recommendation',p:`What are the top-rated ${industry} services for startups?`,kwtype:'nonbranded'},
+    {cat:'Comparison',p:`How do the major ${industry} platforms compare?`,kwtype:'nonbranded'},
+    {cat:'Comparison',p:`Which ${industry} platform offers best value for money?`,kwtype:'nonbranded'},
+    {cat:'Features',p:`What features should I look for in a ${industry} platform?`,kwtype:'nonbranded'},
+    {cat:'Features',p:`What technology powers modern ${industry} solutions?`,kwtype:'nonbranded'},
+    {cat:'Pricing',p:`How much does a typical ${industry} solution cost in India?`,kwtype:'nonbranded'},
+    {cat:'Pricing',p:`What is the average pricing for ${industry} services?`,kwtype:'nonbranded'},
+  ];
+
+  let pool=[];
+  if(mode==='branded') pool=branded;
+  else if(mode==='nonbranded') pool=nonbranded;
+  else{
+    // mixed: interleave branded and non-branded
+    const half=Math.ceil(count/2);
+    const bShuf=branded.sort(()=>Math.random()-.5).slice(0,half);
+    const nbShuf=nonbranded.sort(()=>Math.random()-.5).slice(0,count-half);
+    // Interleave
+    const maxLen=Math.max(bShuf.length,nbShuf.length);
+    for(let i=0;i<maxLen;i++){if(i<nbShuf.length)pool.push(nbShuf[i]);if(i<bShuf.length)pool.push(bShuf[i]);}
+    return pool.slice(0,count);
+  }
+  return pool.sort(()=>Math.random()-.5).slice(0,Math.min(count,pool.length));
+}
+
+// ANALYSE RESPONSE
+function analyse(response,brand,competitors){
+  const lo=response.toLowerCase(),bl=brand.toLowerCase();
+  const mentioned=lo.includes(bl);
+  const all=[brand,...competitors];
+  const positions=all.map(b=>({b,pos:lo.indexOf(b.toLowerCase())})).filter(x=>x.pos>=0).sort((a,b)=>a.pos-b.pos);
+  const rank=mentioned?positions.findIndex(p=>p.b.toLowerCase()===bl)+1:null;
+  const pw=['best','leading','top','excellent','great','trusted','popular','recommended','innovative','reliable','powerful','fast','efficient','preferred','superior'],nw=['expensive','costly','poor','bad','difficult','limited','slow','unreliable','issues','problems','complaints','disappointing'];
+  let sentiment=null;
+  if(mentioned){const i=lo.indexOf(bl),ctx=lo.slice(Math.max(0,i-150),i+200);const p=pw.filter(w=>ctx.includes(w)).length,n=nw.filter(w=>ctx.includes(w)).length;sentiment=p>n+1?'positive':n>p?'negative':'neutral';}
+  const competitorMentions=competitors.filter(c=>lo.includes(c.toLowerCase()));
+  return{mentioned,rank,sentiment,competitorMentions};
+}
+
+// START
+async function startAnalysis(){
+  const brand=document.getElementById('inp-brand').value.trim();
+  const industry=document.getElementById('inp-industry').value.trim();
+  const cs=document.getElementById('inp-competitors').value.trim();
+  const model=document.querySelector('input[name="model"]:checked').value;
+  const kwmode=document.querySelector('input[name="kwmode"]:checked').value;
+  if(!brand||!industry){alert('Please fill in Brand and Industry');return;}
+  const competitors=cs.split(',').map(c=>c.trim()).filter(Boolean).slice(0,5);
+
+  let prompts=[];
+  if(kwmode==='custom'){
+    const raw=document.getElementById('inp-custom').value.trim();
+    if(!raw){alert('Please enter your custom prompts');return;}
+    prompts=raw.split('\n').map(p=>p.trim()).filter(Boolean).slice(0,30).map(p=>({cat:'Custom',p,kwtype:'branded'}));
+    if(prompts.length<2){alert('Please enter at least 2 prompts');return;}
+  } else {
+    const count=parseInt(document.getElementById('inp-prompts').value);
+    prompts=generatePrompts(brand,industry,competitors,count,kwmode);
+  }
+
+  config={brand,industry,competitors,model,kwmode,prompts};
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('progress-screen').style.display='flex';
+  document.getElementById('nav-badge').innerHTML='<span class="blink">◆</span>&nbsp;SCANNING';
+  document.getElementById('nav-badge').className='status-badge badge-scanning';
+  drawRadar('prog-radar',180);
+
+  const logEl=document.getElementById('prog-log');
+  results=[];
+  function log(msg,cls=''){const d=document.createElement('div');d.className='log-line';d.innerHTML=`<span class="log-pfx ${cls}">&gt;</span> <span>${msg}</span>`;logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;}
+
+  const modeLabels={branded:'BRANDED ONLY',nonbranded:'NON-BRANDED ONLY',mixed:'MIXED MODE',custom:'CUSTOM PROMPTS'};
+  log(`RADAR LOCK: ${brand.toUpperCase()}`,'log-active');
+  log(`MODEL: ${model.toUpperCase()} · MODE: ${modeLabels[kwmode]||kwmode}`,'');
+  log(`COMPETITORS: ${competitors.join(', ')||'none'}`,'');
+  log(`LAUNCHING ${prompts.length} PROBES…`,'log-active');
+  await sleep(400);
+
+  for(let i=0;i<prompts.length;i++){
+    const{cat,p,kwtype}=prompts[i];
+    const pct=Math.round(i/prompts.length*100);
+    document.getElementById('prog-bar').style.width=(10+pct*.85)+'%';
+    document.getElementById('prog-count').textContent=`${i+1} / ${prompts.length} prompts`;
+    document.getElementById('prog-pct').textContent=pct+'%';
+    document.getElementById('prog-sub').textContent=`[${kwtype?.toUpperCase()||'PROBE'}] "${p.substring(0,50)}…"`;
+    log(`[${cat.toUpperCase()}][${kwtype==='nonbranded'?'NB':'BR'}] ${p.substring(0,56)}…`,'log-active');
+
+    try{
+      const r=await fetch('/api/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p,model})});
+      if(!r.ok){const e=await r.json();throw new Error(e.error||`HTTP ${r.status}`);}
+      const d=await r.json();
+      const a=analyse(d.response,brand,competitors);
+      results.push({prompt:p,category:cat,kwtype:kwtype||'branded',response:d.response,...a});
+      const s=a.mentioned?`<span class="log-done">✓ ${brand} DETECTED${a.rank?' (rank #'+a.rank+')':''}</span>`:`<span style="color:var(--text3)">— not mentioned</span>`;
+      log(`  └ ${s}`,'');
+    }catch(e){
+      if(e.message.includes('429')){log('  └ RATE LIMIT — waiting 4s…','');await sleep(4000);i--;continue;}
+      results.push({prompt:p,category:cat,kwtype:kwtype||'branded',response:'',mentioned:false,rank:null,sentiment:null,competitorMentions:[],error:e.message});
+      log(`  └ ERROR: ${e.message.substring(0,50)}`,'');
+    }
+    await sleep(200);
+  }
+
+  document.getElementById('prog-bar').style.width='100%';
+  document.getElementById('prog-pct').textContent='100%';
+  log(`SCAN COMPLETE — ${results.filter(r=>r.mentioned).length}/${results.length} MENTIONS`,'log-done');
+  await sleep(700);
+  buildDashboard();
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// DASHBOARD
+function buildDashboard(){
+  const{brand,competitors,model,kwmode}=config,all=[brand,...competitors],total=results.length;
+  const mentioned=results.filter(r=>r.mentioned).length;
+  const mr=total?Math.round(mentioned/total*100):0;
+  const sovD=all.map((b,i)=>{const cnt=results.filter(r=>r.response.toLowerCase().includes(b.toLowerCase())).length;return{brand:b,count:cnt,color:COLS[i%COLS.length]};});
+  const tm=sovD.reduce((s,b)=>s+b.count,0);sovD.forEach(b=>b.sov=tm?Math.round(b.count/tm*100):0);
+  const bSov=sovD.find(b=>b.brand===brand)?.sov||0;
+  const mR=results.filter(r=>r.mentioned);
+  const pos=mR.filter(r=>r.sentiment==='positive').length;
+  const posPct=mR.length?Math.round(pos/mR.length*100):0;
+  const rankedR=results.filter(r=>r.rank);
+  const avgRank=rankedR.length?(rankedR.reduce((s,r)=>s+r.rank,0)/rankedR.length).toFixed(1):'—';
+
+  animNum('kpi-mention',mr,'%');animNum('kpi-sov',bSov,'%');animNum('kpi-pos',posPct,'%');
+  document.getElementById('kpi-rank').textContent=avgRank;
+  document.getElementById('dash-brand').innerHTML=`${brand.toUpperCase()} <span>RADAR</span>`;
+  document.getElementById('meta-prompts').textContent=`${total} prompts`;
+  document.getElementById('meta-model').textContent=model;
+  const modeLabels={branded:'BRANDED',nonbranded:'NON-BRANDED',mixed:'MIXED',custom:'CUSTOM'};
+  document.getElementById('meta-mode').textContent=modeLabels[kwmode]||kwmode;
+  document.getElementById('meta-date').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('brand-th').textContent=brand;
+  document.getElementById('nav-badge').innerHTML='<span class="blink">◆</span>&nbsp;LIVE';
+  document.getElementById('nav-badge').className='status-badge badge-live';
+
+  // KW mode badge on overview
+  const modeColors={branded:'kw-branded',nonbranded:'kw-nonbranded',mixed:'kw-mixed',custom:'kw-branded'};
+  document.getElementById('kw-mode-indicator').innerHTML=`<span class="kw-mode-badge ${modeColors[kwmode]||'kw-mixed'}">${modeLabels[kwmode]||kwmode} MODE</span>`;
+
+  buildSOV(sovD,all);buildSent(all);buildCats();buildHeat(all);buildCompCharts(sovD,all);buildPTable();buildSrcs();
+
+  document.getElementById('progress-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  setTimeout(()=>{
+    document.querySelectorAll('.kpi-card').forEach((el,i)=>setTimeout(()=>el.classList.add('vis'),i*90));
+    document.querySelectorAll('.chart-card').forEach((el,i)=>setTimeout(()=>el.classList.add('vis'),350+i*80));
+    document.querySelectorAll('.cat-item').forEach((el,i)=>setTimeout(()=>el.classList.add('vis'),550+i*70));
+  },80);
+}
+
+function animNum(id,target,sfx=''){const el=document.getElementById(id);let cur=0;const step=target/30;const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=Math.round(cur)+sfx;if(cur>=target)clearInterval(t);},40);}
+function bColor(b,all){return COLS[all.indexOf(b)%COLS.length];}
+
+function buildSOV(sovD,all){
+  document.getElementById('sov-chart').innerHTML=sovD.sort((a,b)=>b.sov-a.sov).map(b=>`
+    <div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${b.color}"></div>${b.brand}</div><div class="sov-num" style="color:${b.color}">${b.sov}%</div></div>
+    <div class="sov-track"><div class="sov-fill" style="background:${b.color};width:0" data-w="${b.sov}"></div></div></div>`).join('');
+  setTimeout(()=>document.querySelectorAll('#sov-chart .sov-fill').forEach(el=>el.style.width=el.dataset.w+'%'),200);
+}
+
+function buildSent(all){
+  document.getElementById('sent-chart').innerHTML=all.map(b=>{
+    const bR=results.filter(r=>r.response.toLowerCase().includes(b.toLowerCase()));
+    const t=bR.length||1,p=bR.filter(r=>r.sentiment==='positive').length,n=bR.filter(r=>r.sentiment==='negative').length,ne=bR.length-p-n;
+    const pp=Math.round(p/t*100),np=Math.round(n/t*100),nep=100-pp-np;
+    return`<div class="sent-item"><div class="sent-name">${b}</div><div class="sent-track">
+      ${pp>0?`<div class="sent-seg ss-pos" style="width:${pp}%">${pp>8?pp+'%':''}</div>`:''}
+      ${nep>0?`<div class="sent-seg ss-neu" style="width:${nep}%">${nep>8?nep+'%':''}</div>`:''}
+      ${np>0?`<div class="sent-seg ss-neg" style="width:${np}%">${np>8?np+'%':''}</div>`:''}
+    </div></div>`;
+  }).join('')+`<div style="display:flex;gap:14px;margin-top:12px;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px"><span style="color:var(--green)">■ POSITIVE</span><span style="color:var(--text2)">■ NEUTRAL</span><span style="color:var(--red)">■ NEGATIVE</span></div>`;
+}
+
+function buildCats(){
+  const cats=['Awareness','Comparison','Recommendation','Features','Pricing','Custom'];
+  const icons={Awareness:'👁',Comparison:'⚖',Recommendation:'💡',Features:'⚙',Pricing:'💰',Custom:'✏️'};
+  document.getElementById('cat-chart').innerHTML=cats.map(cat=>{
+    const r=results.filter(x=>x.category===cat);if(!r.length)return'';
+    const m=r.filter(x=>x.mentioned).length,p=r.filter(x=>x.sentiment==='positive').length,pct=Math.round(m/r.length*100);
+    const col=pct>60?'var(--green)':pct>30?'var(--amber)':'var(--red)';
+    const nb=r.filter(x=>x.kwtype==='nonbranded').length,br=r.filter(x=>x.kwtype==='branded').length;
+    return`<div class="cat-item">
+      <div class="cat-left"><div class="cat-icon">${icons[cat]}</div><div><div class="cat-nm">${cat}</div><div class="cat-ns">${r.length} prompts · ${br>0?br+' branded':''}${br>0&&nb>0?' · ':''}${nb>0?nb+' non-branded':''}</div></div></div>
+      <div class="cat-right">
+        <div class="cat-m"><div class="cat-mv" style="color:${col}">${pct}%</div><div class="cat-ml">Mention rate</div></div>
+        <div class="cat-m"><div class="cat-mv" style="color:var(--cyan)">${m}</div><div class="cat-ml">Mentions</div></div>
+        <div class="cat-m"><div class="cat-mv" style="color:var(--green)">${p}</div><div class="cat-ml">Positive</div></div>
+        <div style="width:60px"><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${col};transition:width 1s ease"></div></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildHeat(all){
+  document.getElementById('heat-table').innerHTML=`<thead><tr><th>Prompt</th><th>Type</th><th>Cat</th>${all.map((b,i)=>`<th style="color:${COLS[i%COLS.length]}">${b.split(' ')[0]}</th>`).join('')}</tr></thead>
+  <tbody>${results.map(r=>`<tr><td>${r.prompt.substring(0,44)}…</td>
+    <td><span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:8px">${r.kwtype==='nonbranded'?'NB':'BR'}</span></td>
+    <td><span class="chip ch-cat">${r.category}</span></td>
+    ${all.map(b=>{const m=r.response.toLowerCase().includes(b.toLowerCase());return`<td><div class="${m?'h-yes':'h-no'}">${m?'✓':'—'}</div></td>`;}).join('')}</tr>`).join('')}</tbody>`;
+}
+
+function buildCompCharts(sovD,all){
+  const mx=Math.max(...sovD.map(b=>b.count),1);
+  document.getElementById('comp-cnt').innerHTML=sovD.sort((a,b)=>b.count-a.count).map(b=>`
+    <div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${b.color}"></div>${b.brand}</div><div class="sov-num" style="color:${b.color}">${b.count}/${results.length}</div></div>
+    <div class="sov-track"><div class="sov-fill" style="background:${b.color};width:0" data-w="${Math.round(b.count/mx*100)}"></div></div></div>`).join('');
+  document.getElementById('comp-sent').innerHTML=all.map(b=>{
+    const bR=results.filter(r=>r.response.toLowerCase().includes(b.toLowerCase()));
+    const t=bR.length||1,p=bR.filter(r=>r.sentiment==='positive').length,n=bR.filter(r=>r.sentiment==='negative').length,ne=bR.length-p-n;
+    const pp=Math.round(p/t*100),np=Math.round(n/t*100),nep=100-pp-np;
+    return`<div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${bColor(b,all)}"></div>${b}</div><div class="sov-num" style="color:var(--green)">${pp}% pos</div></div>
+    <div class="sov-track" style="display:flex;height:7px;gap:1px">${pp>0?`<div style="width:${pp}%;height:7px;background:var(--green);border-radius:1px 0 0 1px"></div>`:''}${nep>0?`<div style="width:${nep}%;height:7px;background:rgba(90,138,170,0.3)"></div>`:''}${np>0?`<div style="width:${np}%;height:7px;background:var(--red);border-radius:0 1px 1px 0"></div>`:''}
+    </div></div>`;
+  }).join('');
+  setTimeout(()=>document.querySelectorAll('#comp-cnt .sov-fill').forEach(el=>el.style.width=el.dataset.w+'%'),200);
+}
+
+function buildPTable(){renderPTable(results);}
+function renderPTable(data){
+  document.getElementById('p-tbody').innerHTML=data.map((r,i)=>`
+    <tr class="rin" style="animation-delay:${i*25}ms">
+      <td><span style="cursor:pointer;color:var(--text)" onclick="jumpSrc(${results.indexOf(r)})">${r.prompt}</span></td>
+      <td><span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:9px">${r.kwtype==='nonbranded'?'NON-BR':'BRANDED'}</span></td>
+      <td><span class="chip ch-cat">${r.category}</span></td>
+      <td><span class="chip ${r.mentioned?'ch-yes':'ch-no'}">${r.mentioned?'✓ YES':'✗ NO'}</span></td>
+      <td>${r.sentiment?`<span class="chip ch-${r.sentiment==='positive'?'pos':r.sentiment==='negative'?'neg':'neu'}">${r.sentiment.toUpperCase()}</span>`:'—'}</td>
+      <td>${r.rank?`<span class="chip ch-rank">#${r.rank}</span>`:'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.competitorMentions?.length?r.competitorMentions.join(', '):'—'}</td>
+    </tr>`).join('');
+}
+
+function filterPrompts(){
+  const cat=document.getElementById('f-cat').value,kwt=document.getElementById('f-kwtype').value,men=document.getElementById('f-mention').value;
+  let d=results;
+  if(cat!=='all')d=d.filter(r=>r.category===cat);
+  if(kwt==='branded')d=d.filter(r=>r.kwtype==='branded');
+  if(kwt==='nonbranded')d=d.filter(r=>r.kwtype==='nonbranded');
+  if(men==='yes')d=d.filter(r=>r.mentioned);
+  if(men==='no')d=d.filter(r=>!r.mentioned);
+  renderPTable(d);
+}
+
+function buildSrcs(){renderSrcs(results);}
+function renderSrcs(data){
+  const{brand,competitors}=config;
+  const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  document.getElementById('sources-list').innerHTML=data.map(r=>{
+    const idx=results.indexOf(r);
+    let txt=r.response||'<em style="color:var(--text3)">No response</em>';
+    txt=txt.replace(new RegExp(esc(brand),'gi'),`<span class="hl-b">${brand}</span>`);
+    competitors.forEach(c=>{txt=txt.replace(new RegExp(esc(c),'gi'),`<span class="hl-c">${c}</span>`);});
+    return`<div class="src-item" id="src-${idx}">
+      <div class="src-head">
+        <div class="src-q">${r.prompt}</div>
+        <div class="src-chips">
+          <span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:9px">${r.kwtype==='nonbranded'?'NON-BRANDED':'BRANDED'}</span>
+          <span class="chip ch-cat">${r.category}</span>
+          <span class="chip ${r.mentioned?'ch-yes':'ch-no'}">${r.mentioned?`✓ ${brand}`:'✗ not mentioned'}</span>
+          ${r.sentiment?`<span class="chip ch-${r.sentiment==='positive'?'pos':r.sentiment==='negative'?'neg':'neu'}">${r.sentiment.toUpperCase()}</span>`:''}
+          ${r.rank?`<span class="chip ch-rank">RANK #${r.rank}</span>`:''}
+        </div>
+      </div>
+      <div class="src-body">${txt}</div>
+      <div class="src-foot">
+        <span>${config.model}</span><span>·</span>
+        <span>${r.response?r.response.split(' ').length+' words':'—'}</span>
+        ${r.competitorMentions?.length?`<span>·</span><span style="color:var(--purple)">Also: ${r.competitorMentions.join(', ')}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  setTimeout(()=>document.querySelectorAll('.src-item').forEach((el,i)=>setTimeout(()=>el.classList.add('vis'),i*35)),100);
+}
+
+function filterSources(){
+  const t=document.getElementById('f-src-type').value,c=document.getElementById('f-src-cat').value;
+  let d=results;
+  if(t==='branded')d=d.filter(r=>r.kwtype==='branded');
+  if(t==='nonbranded')d=d.filter(r=>r.kwtype==='nonbranded');
+  if(c!=='all')d=d.filter(r=>r.category===c);
+  renderSrcs(d);
+}
+
+function jumpSrc(idx){showTab('sources');setTimeout(()=>{const el=document.getElementById('src-'+idx);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},150);}
+function showTab(id){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active');});
+}
+function resetToSetup(){
+  results=[];config={};
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('setup-screen').style.display='block';
+  document.getElementById('nav-badge').innerHTML='<span class="blink">◆</span>&nbsp;SYSTEM READY';
+  document.getElementById('nav-badge').className='status-badge badge-ready';
+}
+</script>
+</body>
+</html>
