@@ -6,22 +6,6 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // ── Auth check ──
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.replace('Bearer ', '').trim();
-  if (!token) return res.status(401).json({ error: 'Missing auth token. Please log in.' });
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) throw new Error('bad token');
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
-    if (!payload.sub) throw new Error('no sub');
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      return res.status(401).json({ error: 'Session expired. Please log in again.' });
-    }
-  } catch(e) {
-    return res.status(401).json({ error: 'Invalid auth token.' });
-  }
-
   const apiKey = process.env.OPENAI_KEY;
   if (!apiKey) return res.status(500).json({ error: 'OpenAI key not configured on server' });
 
