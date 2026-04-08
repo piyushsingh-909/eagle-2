@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Visibility RADAR v2 — Brand Intelligence Platform</title>
+<title>AI Visibility RADAR v3 — Brand Intelligence Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#020b14;--bg2:#041020;--panel:rgba(6,20,40,0.85);--panel2:rgba(8,26,52,0.9);--cyan:#00e5ff;--cyan2:#00b8d4;--cyan-dim:rgba(0,229,255,0.08);--cyan-glow:rgba(0,229,255,0.25);--green:#00ff9d;--green-dim:rgba(0,255,157,0.08);--amber:#ffb300;--red:#ff3d5a;--purple:#b388ff;--text:#c8e8f8;--text2:#5a8aaa;--text3:#2a4a6a;--border:rgba(0,229,255,0.12);--border2:rgba(0,229,255,0.25);--mono:'Share Tech Mono',monospace;--ui:'Rajdhani',sans-serif;--display:'Orbitron',sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -13,7 +14,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,80,140,0.18) 0%,transparent 65%);pointer-events:none;z-index:0}
 .scanlines{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:1000}
 
-/* NAV */
+/* ── NAV ── */
 #nav{position:sticky;top:0;z-index:200;background:rgba(2,11,20,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between}
 .nav-left{display:flex;align-items:center;gap:14px}
 .radar-icon{width:34px;height:34px;border:1.5px solid var(--cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0}
@@ -32,24 +33,71 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .v-tag{font-family:var(--mono);font-size:9px;color:var(--amber);border:1px solid rgba(255,179,0,0.3);background:rgba(255,179,0,0.07);padding:3px 8px;border-radius:2px;letter-spacing:1px}
 .blink{animation:blink .8s step-end infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.user-pill{display:flex;align-items:center;gap:8px;padding:4px 12px;border:1px solid var(--border);border-radius:2px;background:var(--cyan-dim);font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:.5px}
+.user-pill strong{color:var(--cyan);font-weight:400}
+.logout-btn{padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--text3);font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
 
-/* SETUP */
-#setup-screen{position:relative;z-index:1;min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:40px 24px}
-.setup-wrap{width:100%;max-width:760px}
-.setup-hero{text-align:center;margin-bottom:40px}
-.setup-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:12px;opacity:0;animation:fadeUp .6s ease .2s forwards}
-.setup-title{font-family:var(--display);font-size:clamp(26px,4.5vw,46px);font-weight:900;line-height:1.1;letter-spacing:2px;color:#fff;margin-bottom:12px;opacity:0;animation:fadeUp .6s ease .4s forwards}
-.t-cyan{color:var(--cyan)}
-.setup-desc{font-size:15px;color:var(--text2);line-height:1.6;max-width:500px;margin:0 auto;opacity:0;animation:fadeUp .6s ease .6s forwards}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.radar-canvas-wrap{display:flex;justify-content:center;margin-bottom:32px;opacity:0;animation:fadeUp .8s ease .3s forwards}
-.setup-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:32px 38px;position:relative;overflow:hidden;opacity:0;animation:fadeUp .6s ease .8s forwards}
-.setup-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+/* ── AUTH SCREEN ── */
+#auth-screen{position:relative;z-index:1;min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.auth-wrap{width:100%;max-width:440px}
+.auth-hero{text-align:center;margin-bottom:32px}
+.auth-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:10px;opacity:0;animation:fadeUp .6s ease .2s forwards}
+.auth-title{font-family:var(--display);font-size:clamp(22px,4vw,34px);font-weight:900;letter-spacing:2px;color:#fff;margin-bottom:8px;opacity:0;animation:fadeUp .6s ease .4s forwards}
+.auth-sub{font-size:13px;color:var(--text2);opacity:0;animation:fadeUp .6s ease .6s forwards;font-family:var(--mono)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.auth-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:32px;position:relative;overflow:hidden;opacity:0;animation:fadeUp .6s ease .7s forwards}
+.auth-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
 .corner{position:absolute;width:14px;height:14px;border-color:var(--cyan2);border-style:solid;border-width:0}
 .c-tl{top:8px;left:8px;border-top-width:1.5px;border-left-width:1.5px}
 .c-tr{top:8px;right:8px;border-top-width:1.5px;border-right-width:1.5px}
 .c-bl{bottom:8px;left:8px;border-bottom-width:1.5px;border-left-width:1.5px}
 .c-br{bottom:8px;right:8px;border-bottom-width:1.5px;border-right-width:1.5px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
+.auth-tab{flex:1;padding:8px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s;margin-bottom:-1px}
+.auth-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.auth-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.auth-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase}
+.auth-input{background:rgba(0,229,255,0.04);border:1px solid var(--border);border-radius:2px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 14px;outline:none;transition:all .2s;width:100%}
+.auth-input:focus{border-color:var(--cyan2);background:rgba(0,229,255,0.07);box-shadow:0 0 0 3px rgba(0,229,255,0.08)}
+.auth-input::placeholder{color:var(--text3)}
+.auth-btn{width:100%;padding:13px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border-radius:2px;position:relative;overflow:hidden;transition:all .2s;margin-top:4px}
+.auth-btn::before{content:'';position:absolute;inset:0;background:var(--cyan);transform:translateX(-100%);transition:transform .3s ease;z-index:0}
+.auth-btn:hover{color:var(--bg);box-shadow:0 0 30px var(--cyan-glow)}
+.auth-btn:hover::before{transform:translateX(0)}
+.auth-btn span{position:relative;z-index:1}
+.auth-btn:disabled{opacity:.4;cursor:not-allowed}
+.auth-btn:disabled:hover::before{transform:translateX(-100%)}
+.auth-btn:disabled:hover{color:var(--cyan);box-shadow:none}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.google-btn{width:100%;padding:11px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;border-radius:2px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.google-btn:hover{border-color:var(--border2);background:rgba(255,255,255,0.08)}
+.shiprocket-btn{width:100%;padding:11px;background:rgba(255,100,0,0.06);border:1px solid rgba(255,100,0,0.25);color:#ff8c42;font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;border-radius:2px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-top:8px}
+.shiprocket-btn:hover{background:rgba(255,100,0,0.1);border-color:rgba(255,100,0,0.4)}
+.sr-badge{font-size:9px;padding:1px 6px;background:rgba(255,100,0,0.15);border:1px solid rgba(255,100,0,0.3);border-radius:2px;color:#ff8c42;letter-spacing:1px}
+.auth-msg{font-family:var(--mono);font-size:11px;padding:10px 14px;border-radius:2px;margin-top:12px;display:none}
+.auth-msg.err{background:rgba(255,61,90,0.1);border:1px solid rgba(255,61,90,0.25);color:var(--red);display:block}
+.auth-msg.ok{background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.2);color:var(--green);display:block}
+.auth-switch{text-align:center;margin-top:18px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.auth-switch a{color:var(--cyan);cursor:pointer;text-decoration:none}
+.auth-switch a:hover{text-decoration:underline}
+.verify-notice{text-align:center;padding:20px 0}
+.verify-icon{font-size:40px;margin-bottom:12px}
+.verify-title{font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:2px;color:var(--cyan);margin-bottom:8px}
+.verify-msg{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8}
+
+/* ── SETUP / PROGRESS / DASHBOARD — same as v2 ── */
+#setup-screen{position:relative;z-index:1;min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.setup-wrap{width:100%;max-width:760px}
+.setup-hero{text-align:center;margin-bottom:40px}
+.setup-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:12px}
+.setup-title{font-family:var(--display);font-size:clamp(26px,4.5vw,46px);font-weight:900;line-height:1.1;letter-spacing:2px;color:#fff;margin-bottom:12px}
+.t-cyan{color:var(--cyan)}
+.setup-desc{font-size:15px;color:var(--text2);line-height:1.6;max-width:500px;margin:0 auto;font-family:var(--mono)}
+.radar-canvas-wrap{display:flex;justify-content:center;margin-bottom:32px}
+.setup-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:32px 38px;position:relative;overflow:hidden}
+.setup-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
 .panel-title{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:10px}
 .panel-title::before{content:'';width:20px;height:1px;background:var(--cyan)}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -60,8 +108,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .form-input:focus{border-color:var(--cyan2);background:rgba(0,229,255,0.07);box-shadow:0 0 0 3px rgba(0,229,255,0.08)}
 .form-input::placeholder{color:var(--text3)}
 .form-hint{font-size:10px;color:var(--text3);font-family:var(--mono)}
-
-/* MODEL SELECTOR */
 .model-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .model-opt{display:none}
 .model-label{display:flex;flex-direction:column;align-items:center;padding:10px 8px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .15s;background:rgba(0,229,255,0.02);text-align:center;gap:4px}
@@ -73,34 +119,22 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .model-speed{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;margin-top:2px}
 .spd-fast{background:rgba(0,255,157,0.1);color:var(--green);border:1px solid rgba(0,255,157,0.2)}
 .spd-med{background:rgba(255,179,0,0.1);color:var(--amber);border:1px solid rgba(255,179,0,0.2)}
-.spd-slow{background:rgba(255,61,90,0.1);color:var(--red);border:1px solid rgba(255,61,90,0.2)}
-
-/* KEYWORD MODE */
 .kw-toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kw-opt{display:none}
 .kw-label{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .15s;background:rgba(0,229,255,0.02)}
 .kw-label:hover{border-color:var(--border2)}
 .kw-opt:checked+.kw-label{border-color:var(--cyan);background:rgba(0,229,255,0.08)}
 .kw-icon{font-size:18px;flex-shrink:0;margin-top:2px}
-.kw-info{}
 .kw-name{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text);margin-bottom:3px}
 .kw-opt:checked+.kw-label .kw-name{color:var(--cyan)}
 .kw-desc{font-family:var(--mono);font-size:10px;color:var(--text2);line-height:1.5}
-
-/* MIXED MODE extras */
 .mix-info{font-family:var(--mono);font-size:10px;color:var(--text2);padding:8px 12px;background:rgba(0,229,255,0.04);border:1px solid var(--border);border-radius:2px;margin-top:6px;display:none}
 .mix-info.show{display:block}
-
 .launch-btn{width:100%;padding:15px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;cursor:pointer;border-radius:2px;position:relative;overflow:hidden;transition:all .2s;margin-top:4px}
 .launch-btn::before{content:'';position:absolute;inset:0;background:var(--cyan);transform:translateX(-100%);transition:transform .3s ease;z-index:0}
 .launch-btn:hover{color:var(--bg);box-shadow:0 0 30px var(--cyan-glow)}
 .launch-btn:hover::before{transform:translateX(0)}
 .launch-btn span{position:relative;z-index:1}
-.launch-btn:disabled{opacity:.4;cursor:not-allowed}
-.launch-btn:disabled:hover::before{transform:translateX(-100%)}
-.launch-btn:disabled:hover{color:var(--cyan);box-shadow:none}
-
-/* PROGRESS */
 #progress-screen{display:none;position:relative;z-index:1;min-height:calc(100vh - 58px);align-items:center;justify-content:center;flex-direction:column;padding:40px 24px}
 .prog-wrap{width:100%;max-width:560px;text-align:center}
 .prog-radar{margin:0 auto 32px;width:180px;height:180px}
@@ -117,8 +151,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .log-pfx{color:var(--cyan);flex-shrink:0}
 .log-done{color:var(--green)}
 .log-active{color:var(--amber)}
-
-/* DASHBOARD */
 #dashboard{display:none;position:relative;z-index:1}
 .dash-header{background:rgba(2,11,20,0.92);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;backdrop-filter:blur(10px);position:sticky;top:58px;z-index:100}
 .dash-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;margin-bottom:2px}
@@ -131,8 +163,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .rerun-btn{padding:7px 16px;background:transparent;border:1px solid var(--border2);color:var(--cyan);font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .2s}
 .rerun-btn:hover{background:var(--cyan-dim);box-shadow:0 0 15px var(--cyan-glow)}
 .dash-body{padding:24px 32px;max-width:1400px;margin:0 auto}
-
-/* TABS */
 .tabs-wrap{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
 .tab-btn{padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s;margin-bottom:-1px}
 .tab-btn:hover{color:var(--text)}
@@ -141,8 +171,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .tab-panel.active{display:block}
 .sec-head{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--cyan2);text-transform:uppercase;margin-bottom:13px;display:flex;align-items:center;gap:10px}
 .sec-head::after{content:'';flex:1;height:1px;background:var(--border)}
-
-/* KPIs */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .kpi-card{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:18px 20px;position:relative;overflow:hidden;opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s,box-shadow .2s}
 .kpi-card.vis{opacity:1;transform:translateY(0)}
@@ -165,16 +193,12 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .kc3 .kpi-val{color:var(--amber);text-shadow:0 0 20px rgba(255,179,0,0.25)}
 .kc4 .kpi-val{color:var(--purple);text-shadow:0 0 20px rgba(179,136,255,0.25)}
 .kpi-sub{font-size:11px;color:var(--text2);font-family:var(--mono)}
-
-/* CHARTS */
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
 .chart-card{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:18px;position:relative;overflow:hidden;opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s}
 .chart-card.vis{opacity:1;transform:translateY(0)}
 .chart-card.full{grid-column:1/-1}
 .chart-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
 .ct{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--cyan2);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
-
-/* SOV */
 .sov-item{margin-bottom:11px}
 .sov-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .sov-brand{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px;font-family:var(--ui)}
@@ -183,8 +207,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .sov-fill{height:100%;border-radius:1px;width:0;transition:width 1.2s cubic-bezier(.16,1,.3,1);position:relative}
 .sov-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:rgba(255,255,255,0.4);filter:blur(1px)}
 .b-pip{width:8px;height:8px;border-radius:1px;flex-shrink:0}
-
-/* SENTIMENT */
 .sent-item{margin-bottom:10px;display:flex;align-items:center;gap:10px}
 .sent-name{font-size:12px;color:var(--text);width:110px;flex-shrink:0;font-family:var(--ui);font-weight:600}
 .sent-track{flex:1;height:20px;display:flex;border-radius:2px;overflow:hidden;gap:1px}
@@ -192,8 +214,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .ss-pos{background:rgba(0,255,157,0.18);color:var(--green);border:1px solid rgba(0,255,157,0.25)}
 .ss-neu{background:rgba(90,138,170,0.12);color:var(--text2);border:1px solid rgba(90,138,170,0.18)}
 .ss-neg{background:rgba(255,61,90,0.14);color:var(--red);border:1px solid rgba(255,61,90,0.22)}
-
-/* CATEGORY */
 .cat-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s}
 .cat-item.vis{opacity:1;transform:translateX(0)}
 .cat-item:last-child{border-bottom:none}
@@ -205,14 +225,10 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .cat-m{text-align:center}
 .cat-mv{font-family:var(--display);font-size:15px;font-weight:700}
 .cat-ml{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase}
-
-/* KEYWORD MODE BADGE on results */
 .kw-mode-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:3px 10px;border-radius:2px;border:1px solid}
 .kw-branded{color:var(--cyan);border-color:var(--border2);background:var(--cyan-dim)}
 .kw-nonbranded{color:var(--green);border-color:rgba(0,255,157,0.25);background:var(--green-dim)}
 .kw-mixed{color:var(--amber);border-color:rgba(255,179,0,0.25);background:rgba(255,179,0,0.07)}
-
-/* HEATMAP */
 .heat-wrap{overflow-x:auto}
 .heat-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
 .heat-table th{padding:7px 10px;color:var(--text2);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
@@ -223,8 +239,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .heat-table tr:hover td{background:rgba(0,229,255,0.03)}
 .h-yes{display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;background:rgba(0,255,157,0.14);color:var(--green);border:1px solid rgba(0,255,157,0.28);border-radius:2px;font-size:10px;font-weight:700}
 .h-no{display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:2px;font-size:10px}
-
-/* PROMPTS TABLE */
 .p-table{width:100%;border-collapse:collapse;font-size:13px}
 .p-table th{padding:10px 14px;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left;background:rgba(0,229,255,0.02)}
 .p-table td{padding:10px 14px;border-bottom:1px solid rgba(0,229,255,0.05);vertical-align:middle}
@@ -243,8 +257,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .ch-nb{background:rgba(0,255,157,0.06);color:var(--green);border:1px solid rgba(0,255,157,0.15);font-size:9px}
 .fsel{background:var(--panel2);border:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:2px;outline:none;cursor:pointer}
 .fsel:focus{border-color:var(--cyan2);color:var(--text)}
-
-/* SOURCES */
 .src-item{background:var(--panel);border:1px solid var(--border);border-radius:3px;margin-bottom:14px;overflow:hidden;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s}
 .src-item.vis{opacity:1;transform:translateY(0)}
 .src-item:hover{border-color:var(--border2)}
@@ -257,11 +269,13 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .src-foot{padding:6px 16px 12px;display:flex;gap:12px;font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.5px;flex-wrap:wrap}
 
 @media(max-width:960px){.kpi-grid{grid-template-columns:1fr 1fr}.charts-row{grid-template-columns:1fr}.dash-body{padding:16px}.model-grid{grid-template-columns:1fr 1fr}.dash-header{padding:12px 16px;top:58px}#nav{padding:0 16px}}
-@media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.setup-panel{padding:20px 16px}.kw-toggle-row{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.setup-panel{padding:20px 16px}.kw-toggle-row{grid-template-columns:1fr}.auth-panel{padding:24px 18px}}
 </style>
 </head>
 <body>
 <div class="scanlines"></div>
+
+<!-- NAV -->
 <nav id="nav">
   <div class="nav-left">
     <div class="radar-icon"></div>
@@ -270,16 +284,111 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
     <div class="nav-tag">BRAND INTELLIGENCE PLATFORM</div>
   </div>
   <div class="nav-right">
-    <span class="v-tag">v2.0</span>
+    <span class="v-tag">v3.0</span>
+    <div id="user-info" style="display:none;align-items:center;gap:8px">
+      <div class="user-pill">⬡&nbsp;<strong id="user-email">—</strong></div>
+      <button class="logout-btn" onclick="signOut()">LOGOUT</button>
+    </div>
     <div class="status-badge badge-ready" id="nav-badge"><span class="blink">◆</span>&nbsp;SYSTEM READY</div>
   </div>
 </nav>
 
-<!-- SETUP -->
-<div id="setup-screen">
+<!-- ═══════════════════════════════════════════════════════════
+     AUTH SCREEN
+════════════════════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-hero">
+      <div class="auth-eyebrow">// Secure Access · v3.0</div>
+      <div class="auth-title">AI VISIBILITY <span style="color:var(--cyan)">RADAR</span></div>
+      <div class="auth-sub">Sign in to access the brand intelligence platform</div>
+    </div>
+    <div class="auth-panel">
+      <div class="corner c-tl"></div><div class="corner c-tr"></div>
+      <div class="corner c-bl"></div><div class="corner c-br"></div>
+
+      <!-- Tabs: Login / Sign up -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">LOGIN</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">SIGN UP</button>
+      </div>
+
+      <!-- Login form -->
+      <div id="form-login">
+        <div class="auth-field">
+          <label class="auth-label">Email</label>
+          <input class="auth-input" id="login-email" type="email" placeholder="you@company.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Password</label>
+          <input class="auth-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="auth-btn" id="login-btn" onclick="emailLogin()"><span>⚡ LOGIN</span></button>
+        <div class="auth-divider">OR</div>
+        <button class="google-btn" onclick="googleLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+        <button class="shiprocket-btn" onclick="shiprocketSSO()">
+          <span>🚀</span>
+          Continue with Shiprocket ID
+          <span class="sr-badge">COMING SOON</span>
+        </button>
+        <div id="login-msg" class="auth-msg"></div>
+      </div>
+
+      <!-- Sign up form -->
+      <div id="form-signup" style="display:none">
+        <div class="auth-field">
+          <label class="auth-label">Full Name</label>
+          <input class="auth-input" id="signup-name" type="text" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Work Email</label>
+          <input class="auth-input" id="signup-email" type="email" placeholder="you@company.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Password <span style="color:var(--text3);font-size:9px">(min 8 characters)</span></label>
+          <input class="auth-input" id="signup-pass" type="password" placeholder="Choose a strong password" autocomplete="new-password">
+        </div>
+        <button class="auth-btn" id="signup-btn" onclick="emailSignup()"><span>CREATE ACCOUNT</span></button>
+        <div class="auth-divider">OR</div>
+        <button class="google-btn" onclick="googleLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Sign up with Google
+        </button>
+        <button class="shiprocket-btn" onclick="shiprocketSSO()">
+          <span>🚀</span>
+          Sign up with Shiprocket ID
+          <span class="sr-badge">COMING SOON</span>
+        </button>
+        <div id="signup-msg" class="auth-msg"></div>
+      </div>
+
+      <!-- Email verification notice (shown after signup) -->
+      <div id="verify-notice" style="display:none">
+        <div class="verify-notice">
+          <div class="verify-icon">📡</div>
+          <div class="verify-title">CHECK YOUR INBOX</div>
+          <div class="verify-msg">
+            A verification link has been sent to your email.<br>
+            Click it to activate your account, then come back and log in.
+          </div>
+        </div>
+        <button class="auth-btn" onclick="showLoginForm()" style="margin-top:16px"><span>BACK TO LOGIN</span></button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SETUP SCREEN (identical to v2)
+════════════════════════════════════════════════════════════ -->
+<div id="setup-screen" style="display:none">
   <div class="setup-wrap">
     <div class="setup-hero">
-      <div class="setup-eyebrow">// AI Answer Engine Optimisation · v2.0</div>
+      <div class="setup-eyebrow">// AI Answer Engine Optimisation · v3.0</div>
       <div class="setup-title">TRACK YOUR BRAND<br><span class="t-cyan">ACROSS AI ANSWERS</span></div>
       <div class="setup-desc">Run live prompts through any GPT model. Track branded and non-branded visibility. See exactly where you stand against competitors.</div>
     </div>
@@ -288,8 +397,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
       <div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>
       <div class="panel-title">Configure Scan Parameters</div>
       <div class="form-grid">
-
-        <!-- Brand + Industry -->
         <div class="form-row">
           <label class="form-label">Your Brand</label>
           <input class="form-input" id="inp-brand" type="text" placeholder="e.g. Shiprocket">
@@ -298,108 +405,33 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
           <label class="form-label">Industry / Category</label>
           <input class="form-input" id="inp-industry" type="text" placeholder="e.g. ecommerce logistics">
         </div>
-
-        <!-- Competitors -->
         <div class="form-row full">
           <label class="form-label">Competitors <span style="color:var(--text3)">(comma separated, up to 5)</span></label>
           <input class="form-input" id="inp-competitors" type="text" placeholder="e.g. Delhivery, BlueDart, Ecom Express">
         </div>
-
-        <!-- GPT Model selector -->
         <div class="form-row full">
           <label class="form-label" style="margin-bottom:8px">GPT Model</label>
           <div class="model-grid">
-            <div>
-              <input type="radio" name="model" id="m-4o" value="gpt-4o" class="model-opt" checked>
-              <label for="m-4o" class="model-label">
-                <div class="model-name">GPT-4o</div>
-                <div class="model-desc">Best quality</div>
-                <div class="model-speed spd-med">BALANCED</div>
-              </label>
-            </div>
-            <div>
-              <input type="radio" name="model" id="m-4o-mini" value="gpt-4o-mini" class="model-opt">
-              <label for="m-4o-mini" class="model-label">
-                <div class="model-name">4o-mini</div>
-                <div class="model-desc">Fast & cheap</div>
-                <div class="model-speed spd-fast">FASTEST</div>
-              </label>
-            </div>
-            <div>
-              <input type="radio" name="model" id="m-4t" value="gpt-4-turbo" class="model-opt">
-              <label for="m-4t" class="model-label">
-                <div class="model-name">GPT-4T</div>
-                <div class="model-desc">GPT-4 Turbo</div>
-                <div class="model-speed spd-med">DETAILED</div>
-              </label>
-            </div>
-            <div>
-              <input type="radio" name="model" id="m-35" value="gpt-3.5-turbo" class="model-opt">
-              <label for="m-35" class="model-label">
-                <div class="model-name">GPT-3.5</div>
-                <div class="model-desc">Most affordable</div>
-                <div class="model-speed spd-fast">BUDGET</div>
-              </label>
-            </div>
+            <div><input type="radio" name="model" id="m-4o" value="gpt-4o" class="model-opt" checked><label for="m-4o" class="model-label"><div class="model-name">GPT-4o</div><div class="model-desc">Best quality</div><div class="model-speed spd-med">BALANCED</div></label></div>
+            <div><input type="radio" name="model" id="m-4o-mini" value="gpt-4o-mini" class="model-opt"><label for="m-4o-mini" class="model-label"><div class="model-name">4o-mini</div><div class="model-desc">Fast & cheap</div><div class="model-speed spd-fast">FASTEST</div></label></div>
+            <div><input type="radio" name="model" id="m-4t" value="gpt-4-turbo" class="model-opt"><label for="m-4t" class="model-label"><div class="model-name">GPT-4T</div><div class="model-desc">GPT-4 Turbo</div><div class="model-speed spd-med">DETAILED</div></label></div>
+            <div><input type="radio" name="model" id="m-35" value="gpt-3.5-turbo" class="model-opt"><label for="m-35" class="model-label"><div class="model-name">GPT-3.5</div><div class="model-desc">Most affordable</div><div class="model-speed spd-fast">BUDGET</div></label></div>
           </div>
         </div>
-
-        <!-- Keyword mode -->
         <div class="form-row full">
           <label class="form-label" style="margin-bottom:8px">Keyword / Prompt Mode</label>
           <div class="kw-toggle-row">
-            <div>
-              <input type="radio" name="kwmode" id="kw-branded" value="branded" class="kw-opt">
-              <label for="kw-branded" class="kw-label">
-                <div class="kw-icon">🎯</div>
-                <div class="kw-info">
-                  <div class="kw-name">Branded</div>
-                  <div class="kw-desc">Prompts directly mention your brand — comparisons, features, pricing. Measures brand-specific AI visibility.</div>
-                </div>
-              </label>
-            </div>
-            <div>
-              <input type="radio" name="kwmode" id="kw-nonbranded" value="nonbranded" class="kw-opt">
-              <label for="kw-nonbranded" class="kw-label">
-                <div class="kw-icon">🌐</div>
-                <div class="kw-info">
-                  <div class="kw-name">Non-branded</div>
-                  <div class="kw-desc">Generic category prompts only — "best logistics platform", "top shipping tools". Measures organic category presence.</div>
-                </div>
-              </label>
-            </div>
-            <div>
-              <input type="radio" name="kwmode" id="kw-mixed" value="mixed" class="kw-opt" checked>
-              <label for="kw-mixed" class="kw-label">
-                <div class="kw-icon">⚡</div>
-                <div class="kw-info">
-                  <div class="kw-name">Mixed (recommended)</div>
-                  <div class="kw-desc">50/50 split of branded and non-branded. Gives a balanced view of both direct and category-level AI presence.</div>
-                </div>
-              </label>
-            </div>
-            <div>
-              <input type="radio" name="kwmode" id="kw-custom" value="custom" class="kw-opt">
-              <label for="kw-custom" class="kw-label">
-                <div class="kw-icon">✏️</div>
-                <div class="kw-info">
-                  <div class="kw-name">Custom prompts</div>
-                  <div class="kw-desc">Write your own prompts. One per line. Full control over what gets tested.</div>
-                </div>
-              </label>
-            </div>
+            <div><input type="radio" name="kwmode" id="kw-branded" value="branded" class="kw-opt"><label for="kw-branded" class="kw-label"><div class="kw-icon">🎯</div><div class="kw-info"><div class="kw-name">Branded</div><div class="kw-desc">Prompts directly mention your brand.</div></div></label></div>
+            <div><input type="radio" name="kwmode" id="kw-nonbranded" value="nonbranded" class="kw-opt"><label for="kw-nonbranded" class="kw-label"><div class="kw-icon">🌐</div><div class="kw-info"><div class="kw-name">Non-branded</div><div class="kw-desc">Generic category prompts only.</div></div></label></div>
+            <div><input type="radio" name="kwmode" id="kw-mixed" value="mixed" class="kw-opt" checked><label for="kw-mixed" class="kw-label"><div class="kw-icon">⚡</div><div class="kw-info"><div class="kw-name">Mixed (recommended)</div><div class="kw-desc">50/50 branded + non-branded.</div></div></label></div>
+            <div><input type="radio" name="kwmode" id="kw-custom" value="custom" class="kw-opt"><label for="kw-custom" class="kw-label"><div class="kw-icon">✏️</div><div class="kw-info"><div class="kw-name">Custom prompts</div><div class="kw-desc">Write your own. One per line.</div></div></label></div>
           </div>
-          <div class="mix-info" id="mix-info">// Mixed mode: prompts are split ~50% branded (mention your brand) and ~50% non-branded (generic category queries)</div>
+          <div class="mix-info" id="mix-info">// Mixed mode: ~50% branded · ~50% non-branded</div>
         </div>
-
-        <!-- Custom prompts textarea (shown only when custom selected) -->
         <div class="form-row full" id="custom-prompts-row" style="display:none">
           <label class="form-label">Your Custom Prompts <span style="color:var(--text3)">(one per line)</span></label>
-          <textarea class="form-input" id="inp-custom" rows="6" placeholder="What is the best shipping platform in India?&#10;Compare Shiprocket and Delhivery&#10;Which logistics API should I integrate?" style="resize:vertical;line-height:1.7"></textarea>
-          <div class="form-hint">// Enter between 5 and 30 prompts for best results</div>
+          <textarea class="form-input" id="inp-custom" rows="6" placeholder="What is the best shipping platform in India?&#10;Compare Shiprocket and Delhivery" style="resize:vertical;line-height:1.7"></textarea>
         </div>
-
-        <!-- Prompt count (hidden for custom) -->
         <div class="form-row" id="prompt-count-row">
           <label class="form-label">Prompts to Run</label>
           <select class="form-input" id="inp-prompts">
@@ -408,11 +440,8 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
             <option value="30">30 — Deep scan (~90s)</option>
           </select>
         </div>
-
         <div class="form-row full">
-          <button class="launch-btn" id="launch-btn" onclick="startAnalysis()">
-            <span>⚡ INITIATE RADAR SCAN</span>
-          </button>
+          <button class="launch-btn" id="launch-btn" onclick="startAnalysis()"><span>⚡ INITIATE RADAR SCAN</span></button>
         </div>
       </div>
     </div>
@@ -434,7 +463,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 <!-- DASHBOARD -->
 <div id="dashboard">
   <div class="dash-header">
-    <div><div class="dash-lbl">// RADAR REPORT v2.0</div><div class="dash-brand" id="dash-brand">BRAND <span>INTELLIGENCE</span></div></div>
+    <div><div class="dash-lbl">// RADAR REPORT v3.0</div><div class="dash-brand" id="dash-brand">BRAND <span>INTELLIGENCE</span></div></div>
     <div class="dash-meta">
       <div class="dash-mi"><span>PROMPTS</span><span class="dash-mv" id="meta-prompts">—</span></div>
       <div class="dash-mi"><span>MODEL</span><span class="dash-mv model-highlight" id="meta-model">—</span></div>
@@ -450,8 +479,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
       <button class="tab-btn" onclick="showTab('prompts')">ALL PROMPTS</button>
       <button class="tab-btn" onclick="showTab('sources')">SOURCES</button>
     </div>
-
-    <!-- OVERVIEW -->
     <div class="tab-panel active" id="tab-overview">
       <div class="sec-head">Key Performance Indicators</div>
       <div class="kpi-grid">
@@ -465,15 +492,10 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
         <div class="chart-card"><div class="ct">Sentiment Distribution</div><div id="sent-chart"></div></div>
       </div>
       <div class="chart-card full" style="margin-bottom:18px">
-        <div class="ct">
-          Performance by Category
-          <div id="kw-mode-indicator"></div>
-        </div>
+        <div class="ct">Performance by Category<div id="kw-mode-indicator"></div></div>
         <div id="cat-chart"></div>
       </div>
     </div>
-
-    <!-- COMPETITORS -->
     <div class="tab-panel" id="tab-competitors">
       <div class="chart-card full" style="margin-bottom:16px"><div class="ct">Brand Mention Heatmap</div><div class="heat-wrap"><table class="heat-table" id="heat-table"></table></div></div>
       <div class="charts-row">
@@ -481,8 +503,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
         <div class="chart-card"><div class="ct">Sentiment Comparison</div><div id="comp-sent"></div></div>
       </div>
     </div>
-
-    <!-- PROMPTS -->
     <div class="tab-panel" id="tab-prompts">
       <div class="chart-card full">
         <div class="ct">All Prompts
@@ -497,8 +517,6 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
         </div>
       </div>
     </div>
-
-    <!-- SOURCES -->
     <div class="tab-panel" id="tab-sources">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
         <div><div style="font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:2px;color:var(--text);margin-bottom:3px">RAW AI RESPONSES</div><div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px">Brand in <span style="color:var(--cyan)">cyan</span> · Competitors in <span style="color:var(--purple)">purple</span></div></div>
@@ -513,12 +531,123 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 </div>
 
 <script>
-// RADAR CANVAS
+// ── SUPABASE INIT ──────────────────────────────────────────
+const SUPABASE_URL = '__SUPABASE_URL__';
+const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentSession = null;
+
+// ── BOOT: check existing session ──
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){onSignedIn(session);}
+  else{showAuthScreen();}
+})();
+
+sb.auth.onAuthStateChange((_,session)=>{
+  if(session)onSignedIn(session);
+});
+
+// ── AUTH HELPERS ───────────────────────────────────────────
+function showAuthScreen(){
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('user-info').style.display='none';
+}
+
+function onSignedIn(session){
+  currentSession=session;
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.getElementById('user-info').style.display='flex';
+  const email=session.user.email||session.user.user_metadata?.email||'User';
+  document.getElementById('user-email').textContent=email;
+  drawRadar('setup-radar',180);
+  document.querySelectorAll('input[name="kwmode"]').forEach(r=>{
+    r.addEventListener('change',()=>{
+      const v=document.querySelector('input[name="kwmode"]:checked').value;
+      document.getElementById('custom-prompts-row').style.display=v==='custom'?'flex':'none';
+      document.getElementById('prompt-count-row').style.display=v==='custom'?'none':'flex';
+      document.getElementById('mix-info').classList.toggle('show',v==='mixed');
+    });
+  });
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  currentSession=null;
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('progress-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='none';
+  showAuthScreen();
+}
+
+function switchAuthTab(t){
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-signup').classList.toggle('active',t==='signup');
+  document.getElementById('form-login').style.display=t==='login'?'block':'none';
+  document.getElementById('form-signup').style.display=t==='signup'?'block':'none';
+  document.getElementById('verify-notice').style.display='none';
+}
+
+function showLoginForm(){
+  document.getElementById('verify-notice').style.display='none';
+  document.getElementById('form-login').style.display='block';
+  switchAuthTab('login');
+}
+
+function setMsg(id,msg,type){
+  const el=document.getElementById(id);
+  el.textContent=msg;el.className='auth-msg '+(type==='ok'?'ok':'err');
+}
+
+async function emailLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const btn=document.getElementById('login-btn');
+  if(!email||!pass){setMsg('login-msg','Please fill in email and password.','err');return;}
+  btn.disabled=true;btn.querySelector('span').textContent='AUTHENTICATING…';
+  const{error}=await sb.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;btn.querySelector('span').textContent='⚡ LOGIN';
+  if(error){setMsg('login-msg',error.message,'err');}
+}
+
+async function emailSignup(){
+  const name=document.getElementById('signup-name').value.trim();
+  const email=document.getElementById('signup-email').value.trim();
+  const pass=document.getElementById('signup-pass').value;
+  const btn=document.getElementById('signup-btn');
+  if(!name||!email||!pass){setMsg('signup-msg','Please fill in all fields.','err');return;}
+  if(pass.length<8){setMsg('signup-msg','Password must be at least 8 characters.','err');return;}
+  btn.disabled=true;btn.querySelector('span').textContent='CREATING ACCOUNT…';
+  const{error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
+  btn.disabled=false;btn.querySelector('span').textContent='CREATE ACCOUNT';
+  if(error){setMsg('signup-msg',error.message,'err');}
+  else{
+    document.getElementById('form-signup').style.display='none';
+    document.getElementById('verify-notice').style.display='block';
+  }
+}
+
+async function googleLogin(){
+  const{error}=await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:window.location.origin}
+  });
+  if(error)alert(error.message);
+}
+
+function shiprocketSSO(){
+  alert('Shiprocket SSO coming soon. Your internal team will connect this to Shiprocket\'s OAuth endpoint.');
+}
+
+// ── RADAR CANVAS ───────────────────────────────────────────
 function drawRadar(id,size){
   const c=document.getElementById(id);if(!c)return;
   const ctx=c.getContext('2d'),cx=size/2,cy=size/2,r=size/2-6;
-  let a=0;
+  let a=0,af=true;
   function fr(){
+    if(!af)return;
     ctx.clearRect(0,0,size,size);
     [.25,.5,.75,1].forEach(f=>{ctx.beginPath();ctx.arc(cx,cy,r*f,0,Math.PI*2);ctx.strokeStyle=`rgba(0,229,255,${f===1?.2:.07})`;ctx.lineWidth=f===1?1.5:.5;ctx.stroke();});
     ctx.strokeStyle='rgba(0,229,255,0.05)';ctx.lineWidth=.5;
@@ -533,28 +662,16 @@ function drawRadar(id,size){
     a+=0.04;requestAnimationFrame(fr);
   }
   fr();
+  return ()=>{af=false;};
 }
-window.addEventListener('DOMContentLoaded',()=>{
-  drawRadar('setup-radar',180);
-  // Show/hide custom prompts & mix info
-  document.querySelectorAll('input[name="kwmode"]').forEach(r=>{
-    r.addEventListener('change',()=>{
-      const v=document.querySelector('input[name="kwmode"]:checked').value;
-      document.getElementById('custom-prompts-row').style.display=v==='custom'?'flex':'none';
-      document.getElementById('prompt-count-row').style.display=v==='custom'?'none':'flex';
-      document.getElementById('mix-info').classList.toggle('show',v==='mixed');
-    });
-  });
-});
 
-// STATE
+// ── STATE ──────────────────────────────────────────────────
 let results=[],config={};
 const COLS=['#00e5ff','#00ff9d','#ffb300','#ff3d5a','#b388ff','#ff6d00','#00e676'];
 
-// PROMPTS GENERATOR
+// ── PROMPT GENERATOR (same as v2) ─────────────────────────
 function generatePrompts(brand,industry,competitors,count,mode){
   const c0=competitors[0]||'competitors',c1=competitors[1]||c0,ca=competitors.slice(0,4).join(', ')||'alternatives';
-
   const branded=[
     {cat:'Comparison',p:`Compare ${brand} vs ${c0} for ${industry}`,kwtype:'branded'},
     {cat:'Comparison',p:`What is the difference between ${brand} and ${c0}?`,kwtype:'branded'},
@@ -576,7 +693,6 @@ function generatePrompts(brand,industry,competitors,count,mode){
     {cat:'Recommendation',p:`Is ${brand} good for D2C brands?`,kwtype:'branded'},
     {cat:'Recommendation',p:`How does ${brand} help small businesses?`,kwtype:'branded'},
   ];
-
   const nonbranded=[
     {cat:'Awareness',p:`What are the best ${industry} companies in India?`,kwtype:'nonbranded'},
     {cat:'Awareness',p:`Which ${industry} platforms are most popular right now?`,kwtype:'nonbranded'},
@@ -597,16 +713,13 @@ function generatePrompts(brand,industry,competitors,count,mode){
     {cat:'Pricing',p:`How much does a typical ${industry} solution cost in India?`,kwtype:'nonbranded'},
     {cat:'Pricing',p:`What is the average pricing for ${industry} services?`,kwtype:'nonbranded'},
   ];
-
   let pool=[];
-  if(mode==='branded') pool=branded;
-  else if(mode==='nonbranded') pool=nonbranded;
+  if(mode==='branded')pool=branded;
+  else if(mode==='nonbranded')pool=nonbranded;
   else{
-    // mixed: interleave branded and non-branded
     const half=Math.ceil(count/2);
     const bShuf=branded.sort(()=>Math.random()-.5).slice(0,half);
     const nbShuf=nonbranded.sort(()=>Math.random()-.5).slice(0,count-half);
-    // Interleave
     const maxLen=Math.max(bShuf.length,nbShuf.length);
     for(let i=0;i<maxLen;i++){if(i<nbShuf.length)pool.push(nbShuf[i]);if(i<bShuf.length)pool.push(bShuf[i]);}
     return pool.slice(0,count);
@@ -614,7 +727,6 @@ function generatePrompts(brand,industry,competitors,count,mode){
   return pool.sort(()=>Math.random()-.5).slice(0,Math.min(count,pool.length));
 }
 
-// ANALYSE RESPONSE
 function analyse(response,brand,competitors){
   const lo=response.toLowerCase(),bl=brand.toLowerCase();
   const mentioned=lo.includes(bl);
@@ -628,8 +740,8 @@ function analyse(response,brand,competitors){
   return{mentioned,rank,sentiment,competitorMentions};
 }
 
-// START
 async function startAnalysis(){
+  if(!currentSession){alert('Please log in first.');return;}
   const brand=document.getElementById('inp-brand').value.trim();
   const industry=document.getElementById('inp-industry').value.trim();
   const cs=document.getElementById('inp-competitors').value.trim();
@@ -644,7 +756,7 @@ async function startAnalysis(){
     if(!raw){alert('Please enter your custom prompts');return;}
     prompts=raw.split('\n').map(p=>p.trim()).filter(Boolean).slice(0,30).map(p=>({cat:'Custom',p,kwtype:'branded'}));
     if(prompts.length<2){alert('Please enter at least 2 prompts');return;}
-  } else {
+  }else{
     const count=parseInt(document.getElementById('inp-prompts').value);
     prompts=generatePrompts(brand,industry,competitors,count,kwmode);
   }
@@ -659,7 +771,6 @@ async function startAnalysis(){
   const logEl=document.getElementById('prog-log');
   results=[];
   function log(msg,cls=''){const d=document.createElement('div');d.className='log-line';d.innerHTML=`<span class="log-pfx ${cls}">&gt;</span> <span>${msg}</span>`;logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;}
-
   const modeLabels={branded:'BRANDED ONLY',nonbranded:'NON-BRANDED ONLY',mixed:'MIXED MODE',custom:'CUSTOM PROMPTS'};
   log(`RADAR LOCK: ${brand.toUpperCase()}`,'log-active');
   log(`MODEL: ${model.toUpperCase()} · MODE: ${modeLabels[kwmode]||kwmode}`,'');
@@ -675,9 +786,10 @@ async function startAnalysis(){
     document.getElementById('prog-pct').textContent=pct+'%';
     document.getElementById('prog-sub').textContent=`[${kwtype?.toUpperCase()||'PROBE'}] "${p.substring(0,50)}…"`;
     log(`[${cat.toUpperCase()}][${kwtype==='nonbranded'?'NB':'BR'}] ${p.substring(0,56)}…`,'log-active');
-
     try{
-      const r=await fetch('/api/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p,model})});
+      // Pass the user's access token so the server can verify it
+      const token=currentSession.access_token;
+      const r=await fetch('/api/scan',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({prompt:p,model})});
       if(!r.ok){const e=await r.json();throw new Error(e.error||`HTTP ${r.status}`);}
       const d=await r.json();
       const a=analyse(d.response,brand,competitors);
@@ -691,7 +803,6 @@ async function startAnalysis(){
     }
     await sleep(200);
   }
-
   document.getElementById('prog-bar').style.width='100%';
   document.getElementById('prog-pct').textContent='100%';
   log(`SCAN COMPLETE — ${results.filter(r=>r.mentioned).length}/${results.length} MENTIONS`,'log-done');
@@ -701,7 +812,7 @@ async function startAnalysis(){
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
-// DASHBOARD
+// ── DASHBOARD (same as v2) ────────────────────────────────
 function buildDashboard(){
   const{brand,competitors,model,kwmode}=config,all=[brand,...competitors],total=results.length;
   const mentioned=results.filter(r=>r.mentioned).length;
@@ -714,7 +825,6 @@ function buildDashboard(){
   const posPct=mR.length?Math.round(pos/mR.length*100):0;
   const rankedR=results.filter(r=>r.rank);
   const avgRank=rankedR.length?(rankedR.reduce((s,r)=>s+r.rank,0)/rankedR.length).toFixed(1):'—';
-
   animNum('kpi-mention',mr,'%');animNum('kpi-sov',bSov,'%');animNum('kpi-pos',posPct,'%');
   document.getElementById('kpi-rank').textContent=avgRank;
   document.getElementById('dash-brand').innerHTML=`${brand.toUpperCase()} <span>RADAR</span>`;
@@ -726,13 +836,9 @@ function buildDashboard(){
   document.getElementById('brand-th').textContent=brand;
   document.getElementById('nav-badge').innerHTML='<span class="blink">◆</span>&nbsp;LIVE';
   document.getElementById('nav-badge').className='status-badge badge-live';
-
-  // KW mode badge on overview
   const modeColors={branded:'kw-branded',nonbranded:'kw-nonbranded',mixed:'kw-mixed',custom:'kw-branded'};
   document.getElementById('kw-mode-indicator').innerHTML=`<span class="kw-mode-badge ${modeColors[kwmode]||'kw-mixed'}">${modeLabels[kwmode]||kwmode} MODE</span>`;
-
   buildSOV(sovD,all);buildSent(all);buildCats();buildHeat(all);buildCompCharts(sovD,all);buildPTable();buildSrcs();
-
   document.getElementById('progress-screen').style.display='none';
   document.getElementById('dashboard').style.display='block';
   setTimeout(()=>{
@@ -744,150 +850,22 @@ function buildDashboard(){
 
 function animNum(id,target,sfx=''){const el=document.getElementById(id);let cur=0;const step=target/30;const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=Math.round(cur)+sfx;if(cur>=target)clearInterval(t);},40);}
 function bColor(b,all){return COLS[all.indexOf(b)%COLS.length];}
-
-function buildSOV(sovD,all){
-  document.getElementById('sov-chart').innerHTML=sovD.sort((a,b)=>b.sov-a.sov).map(b=>`
-    <div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${b.color}"></div>${b.brand}</div><div class="sov-num" style="color:${b.color}">${b.sov}%</div></div>
-    <div class="sov-track"><div class="sov-fill" style="background:${b.color};width:0" data-w="${b.sov}"></div></div></div>`).join('');
-  setTimeout(()=>document.querySelectorAll('#sov-chart .sov-fill').forEach(el=>el.style.width=el.dataset.w+'%'),200);
-}
-
-function buildSent(all){
-  document.getElementById('sent-chart').innerHTML=all.map(b=>{
-    const bR=results.filter(r=>r.response.toLowerCase().includes(b.toLowerCase()));
-    const t=bR.length||1,p=bR.filter(r=>r.sentiment==='positive').length,n=bR.filter(r=>r.sentiment==='negative').length,ne=bR.length-p-n;
-    const pp=Math.round(p/t*100),np=Math.round(n/t*100),nep=100-pp-np;
-    return`<div class="sent-item"><div class="sent-name">${b}</div><div class="sent-track">
-      ${pp>0?`<div class="sent-seg ss-pos" style="width:${pp}%">${pp>8?pp+'%':''}</div>`:''}
-      ${nep>0?`<div class="sent-seg ss-neu" style="width:${nep}%">${nep>8?nep+'%':''}</div>`:''}
-      ${np>0?`<div class="sent-seg ss-neg" style="width:${np}%">${np>8?np+'%':''}</div>`:''}
-    </div></div>`;
-  }).join('')+`<div style="display:flex;gap:14px;margin-top:12px;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px"><span style="color:var(--green)">■ POSITIVE</span><span style="color:var(--text2)">■ NEUTRAL</span><span style="color:var(--red)">■ NEGATIVE</span></div>`;
-}
-
-function buildCats(){
-  const cats=['Awareness','Comparison','Recommendation','Features','Pricing','Custom'];
-  const icons={Awareness:'👁',Comparison:'⚖',Recommendation:'💡',Features:'⚙',Pricing:'💰',Custom:'✏️'};
-  document.getElementById('cat-chart').innerHTML=cats.map(cat=>{
-    const r=results.filter(x=>x.category===cat);if(!r.length)return'';
-    const m=r.filter(x=>x.mentioned).length,p=r.filter(x=>x.sentiment==='positive').length,pct=Math.round(m/r.length*100);
-    const col=pct>60?'var(--green)':pct>30?'var(--amber)':'var(--red)';
-    const nb=r.filter(x=>x.kwtype==='nonbranded').length,br=r.filter(x=>x.kwtype==='branded').length;
-    return`<div class="cat-item">
-      <div class="cat-left"><div class="cat-icon">${icons[cat]}</div><div><div class="cat-nm">${cat}</div><div class="cat-ns">${r.length} prompts · ${br>0?br+' branded':''}${br>0&&nb>0?' · ':''}${nb>0?nb+' non-branded':''}</div></div></div>
-      <div class="cat-right">
-        <div class="cat-m"><div class="cat-mv" style="color:${col}">${pct}%</div><div class="cat-ml">Mention rate</div></div>
-        <div class="cat-m"><div class="cat-mv" style="color:var(--cyan)">${m}</div><div class="cat-ml">Mentions</div></div>
-        <div class="cat-m"><div class="cat-mv" style="color:var(--green)">${p}</div><div class="cat-ml">Positive</div></div>
-        <div style="width:60px"><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${col};transition:width 1s ease"></div></div></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function buildHeat(all){
-  document.getElementById('heat-table').innerHTML=`<thead><tr><th>Prompt</th><th>Type</th><th>Cat</th>${all.map((b,i)=>`<th style="color:${COLS[i%COLS.length]}">${b.split(' ')[0]}</th>`).join('')}</tr></thead>
-  <tbody>${results.map(r=>`<tr><td>${r.prompt.substring(0,44)}…</td>
-    <td><span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:8px">${r.kwtype==='nonbranded'?'NB':'BR'}</span></td>
-    <td><span class="chip ch-cat">${r.category}</span></td>
-    ${all.map(b=>{const m=r.response.toLowerCase().includes(b.toLowerCase());return`<td><div class="${m?'h-yes':'h-no'}">${m?'✓':'—'}</div></td>`;}).join('')}</tr>`).join('')}</tbody>`;
-}
-
-function buildCompCharts(sovD,all){
-  const mx=Math.max(...sovD.map(b=>b.count),1);
-  document.getElementById('comp-cnt').innerHTML=sovD.sort((a,b)=>b.count-a.count).map(b=>`
-    <div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${b.color}"></div>${b.brand}</div><div class="sov-num" style="color:${b.color}">${b.count}/${results.length}</div></div>
-    <div class="sov-track"><div class="sov-fill" style="background:${b.color};width:0" data-w="${Math.round(b.count/mx*100)}"></div></div></div>`).join('');
-  document.getElementById('comp-sent').innerHTML=all.map(b=>{
-    const bR=results.filter(r=>r.response.toLowerCase().includes(b.toLowerCase()));
-    const t=bR.length||1,p=bR.filter(r=>r.sentiment==='positive').length,n=bR.filter(r=>r.sentiment==='negative').length,ne=bR.length-p-n;
-    const pp=Math.round(p/t*100),np=Math.round(n/t*100),nep=100-pp-np;
-    return`<div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${bColor(b,all)}"></div>${b}</div><div class="sov-num" style="color:var(--green)">${pp}% pos</div></div>
-    <div class="sov-track" style="display:flex;height:7px;gap:1px">${pp>0?`<div style="width:${pp}%;height:7px;background:var(--green);border-radius:1px 0 0 1px"></div>`:''}${nep>0?`<div style="width:${nep}%;height:7px;background:rgba(90,138,170,0.3)"></div>`:''}${np>0?`<div style="width:${np}%;height:7px;background:var(--red);border-radius:0 1px 1px 0"></div>`:''}
-    </div></div>`;
-  }).join('');
-  setTimeout(()=>document.querySelectorAll('#comp-cnt .sov-fill').forEach(el=>el.style.width=el.dataset.w+'%'),200);
-}
-
+function buildSOV(sovD,all){document.getElementById('sov-chart').innerHTML=sovD.sort((a,b)=>b.sov-a.sov).map(b=>`<div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${b.color}"></div>${b.brand}</div><div class="sov-num" style="color:${b.color}">${b.sov}%</div></div><div class="sov-track"><div class="sov-fill" style="background:${b.color};width:0" data-w="${b.sov}"></div></div></div>`).join('');setTimeout(()=>document.querySelectorAll('#sov-chart .sov-fill').forEach(el=>el.style.width=el.dataset.w+'%'),200);}
+function buildSent(all){document.getElementById('sent-chart').innerHTML=all.map(b=>{const bR=results.filter(r=>r.response.toLowerCase().includes(b.toLowerCase()));const t=bR.length||1,p=bR.filter(r=>r.sentiment==='positive').length,n=bR.filter(r=>r.sentiment==='negative').length,ne=bR.length-p-n;const pp=Math.round(p/t*100),np=Math.round(n/t*100),nep=100-pp-np;return`<div class="sent-item"><div class="sent-name">${b}</div><div class="sent-track">${pp>0?`<div class="sent-seg ss-pos" style="width:${pp}%">${pp>8?pp+'%':''}</div>`:''}${nep>0?`<div class="sent-seg ss-neu" style="width:${nep}%">${nep>8?nep+'%':''}</div>`:''}${np>0?`<div class="sent-seg ss-neg" style="width:${np}%">${np>8?np+'%':''}</div>`:''}
+</div></div>`;}).join('')+`<div style="display:flex;gap:14px;margin-top:12px;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px"><span style="color:var(--green)">■ POSITIVE</span><span style="color:var(--text2)">■ NEUTRAL</span><span style="color:var(--red)">■ NEGATIVE</span></div>`;}
+function buildCats(){const cats=['Awareness','Comparison','Recommendation','Features','Pricing','Custom'];const icons={Awareness:'👁',Comparison:'⚖',Recommendation:'💡',Features:'⚙',Pricing:'💰',Custom:'✏️'};document.getElementById('cat-chart').innerHTML=cats.map(cat=>{const r=results.filter(x=>x.category===cat);if(!r.length)return'';const m=r.filter(x=>x.mentioned).length,p=r.filter(x=>x.sentiment==='positive').length,pct=Math.round(m/r.length*100);const col=pct>60?'var(--green)':pct>30?'var(--amber)':'var(--red)';const nb=r.filter(x=>x.kwtype==='nonbranded').length,br=r.filter(x=>x.kwtype==='branded').length;return`<div class="cat-item"><div class="cat-left"><div class="cat-icon">${icons[cat]}</div><div><div class="cat-nm">${cat}</div><div class="cat-ns">${r.length} prompts · ${br>0?br+' branded':''}${br>0&&nb>0?' · ':''}${nb>0?nb+' non-branded':''}</div></div></div><div class="cat-right"><div class="cat-m"><div class="cat-mv" style="color:${col}">${pct}%</div><div class="cat-ml">Mention rate</div></div><div class="cat-m"><div class="cat-mv" style="color:var(--cyan)">${m}</div><div class="cat-ml">Mentions</div></div><div class="cat-m"><div class="cat-mv" style="color:var(--green)">${p}</div><div class="cat-ml">Positive</div></div><div style="width:60px"><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${col};transition:width 1s ease"></div></div></div></div></div>`;}).join('');}
+function buildHeat(all){document.getElementById('heat-table').innerHTML=`<thead><tr><th>Prompt</th><th>Type</th><th>Cat</th>${all.map((b,i)=>`<th style="color:${COLS[i%COLS.length]}">${b.split(' ')[0]}</th>`).join('')}</tr></thead><tbody>${results.map(r=>`<tr><td>${r.prompt.substring(0,44)}…</td><td><span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:8px">${r.kwtype==='nonbranded'?'NB':'BR'}</span></td><td><span class="chip ch-cat">${r.category}</span></td>${all.map(b=>{const m=r.response.toLowerCase().includes(b.toLowerCase());return`<td><div class="${m?'h-yes':'h-no'}">${m?'✓':'—'}</div></td>`;}).join('')}</tr>`).join('')}</tbody>`;}
+function buildCompCharts(sovD,all){const mx=Math.max(...sovD.map(b=>b.count),1);document.getElementById('comp-cnt').innerHTML=sovD.sort((a,b)=>b.count-a.count).map(b=>`<div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${b.color}"></div>${b.brand}</div><div class="sov-num" style="color:${b.color}">${b.count}/${results.length}</div></div><div class="sov-track"><div class="sov-fill" style="background:${b.color};width:0" data-w="${Math.round(b.count/mx*100)}"></div></div></div>`).join('');document.getElementById('comp-sent').innerHTML=all.map(b=>{const bR=results.filter(r=>r.response.toLowerCase().includes(b.toLowerCase()));const t=bR.length||1,p=bR.filter(r=>r.sentiment==='positive').length,n=bR.filter(r=>r.sentiment==='negative').length,ne=bR.length-p-n;const pp=Math.round(p/t*100),np=Math.round(n/t*100),nep=100-pp-np;return`<div class="sov-item"><div class="sov-hdr"><div class="sov-brand"><div class="b-pip" style="background:${bColor(b,all)}"></div>${b}</div><div class="sov-num" style="color:var(--green)">${pp}% pos</div></div><div class="sov-track" style="display:flex;height:7px;gap:1px">${pp>0?`<div style="width:${pp}%;height:7px;background:var(--green);border-radius:1px 0 0 1px"></div>`:''}${nep>0?`<div style="width:${nep}%;height:7px;background:rgba(90,138,170,0.3)"></div>`:''}${np>0?`<div style="width:${np}%;height:7px;background:var(--red);border-radius:0 1px 1px 0"></div>`:''}
+</div></div>`;}).join('');setTimeout(()=>document.querySelectorAll('#comp-cnt .sov-fill').forEach(el=>el.style.width=el.dataset.w+'%'),200);}
 function buildPTable(){renderPTable(results);}
-function renderPTable(data){
-  document.getElementById('p-tbody').innerHTML=data.map((r,i)=>`
-    <tr class="rin" style="animation-delay:${i*25}ms">
-      <td><span style="cursor:pointer;color:var(--text)" onclick="jumpSrc(${results.indexOf(r)})">${r.prompt}</span></td>
-      <td><span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:9px">${r.kwtype==='nonbranded'?'NON-BR':'BRANDED'}</span></td>
-      <td><span class="chip ch-cat">${r.category}</span></td>
-      <td><span class="chip ${r.mentioned?'ch-yes':'ch-no'}">${r.mentioned?'✓ YES':'✗ NO'}</span></td>
-      <td>${r.sentiment?`<span class="chip ch-${r.sentiment==='positive'?'pos':r.sentiment==='negative'?'neg':'neu'}">${r.sentiment.toUpperCase()}</span>`:'—'}</td>
-      <td>${r.rank?`<span class="chip ch-rank">#${r.rank}</span>`:'—'}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.competitorMentions?.length?r.competitorMentions.join(', '):'—'}</td>
-    </tr>`).join('');
-}
-
-function filterPrompts(){
-  const cat=document.getElementById('f-cat').value,kwt=document.getElementById('f-kwtype').value,men=document.getElementById('f-mention').value;
-  let d=results;
-  if(cat!=='all')d=d.filter(r=>r.category===cat);
-  if(kwt==='branded')d=d.filter(r=>r.kwtype==='branded');
-  if(kwt==='nonbranded')d=d.filter(r=>r.kwtype==='nonbranded');
-  if(men==='yes')d=d.filter(r=>r.mentioned);
-  if(men==='no')d=d.filter(r=>!r.mentioned);
-  renderPTable(d);
-}
-
+function renderPTable(data){document.getElementById('p-tbody').innerHTML=data.map((r,i)=>`<tr class="rin" style="animation-delay:${i*25}ms"><td><span style="cursor:pointer;color:var(--text)" onclick="jumpSrc(${results.indexOf(r)})">${r.prompt}</span></td><td><span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:9px">${r.kwtype==='nonbranded'?'NON-BR':'BRANDED'}</span></td><td><span class="chip ch-cat">${r.category}</span></td><td><span class="chip ${r.mentioned?'ch-yes':'ch-no'}">${r.mentioned?'✓ YES':'✗ NO'}</span></td><td>${r.sentiment?`<span class="chip ch-${r.sentiment==='positive'?'pos':r.sentiment==='negative'?'neg':'neu'}">${r.sentiment.toUpperCase()}</span>`:'—'}</td><td>${r.rank?`<span class="chip ch-rank">#${r.rank}</span>`:'—'}</td><td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.competitorMentions?.length?r.competitorMentions.join(', '):'—'}</td></tr>`).join('');}
+function filterPrompts(){const cat=document.getElementById('f-cat').value,kwt=document.getElementById('f-kwtype').value,men=document.getElementById('f-mention').value;let d=results;if(cat!=='all')d=d.filter(r=>r.category===cat);if(kwt==='branded')d=d.filter(r=>r.kwtype==='branded');if(kwt==='nonbranded')d=d.filter(r=>r.kwtype==='nonbranded');if(men==='yes')d=d.filter(r=>r.mentioned);if(men==='no')d=d.filter(r=>!r.mentioned);renderPTable(d);}
 function buildSrcs(){renderSrcs(results);}
-function renderSrcs(data){
-  const{brand,competitors}=config;
-  const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  document.getElementById('sources-list').innerHTML=data.map(r=>{
-    const idx=results.indexOf(r);
-    let txt=r.response||'<em style="color:var(--text3)">No response</em>';
-    txt=txt.replace(new RegExp(esc(brand),'gi'),`<span class="hl-b">${brand}</span>`);
-    competitors.forEach(c=>{txt=txt.replace(new RegExp(esc(c),'gi'),`<span class="hl-c">${c}</span>`);});
-    return`<div class="src-item" id="src-${idx}">
-      <div class="src-head">
-        <div class="src-q">${r.prompt}</div>
-        <div class="src-chips">
-          <span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:9px">${r.kwtype==='nonbranded'?'NON-BRANDED':'BRANDED'}</span>
-          <span class="chip ch-cat">${r.category}</span>
-          <span class="chip ${r.mentioned?'ch-yes':'ch-no'}">${r.mentioned?`✓ ${brand}`:'✗ not mentioned'}</span>
-          ${r.sentiment?`<span class="chip ch-${r.sentiment==='positive'?'pos':r.sentiment==='negative'?'neg':'neu'}">${r.sentiment.toUpperCase()}</span>`:''}
-          ${r.rank?`<span class="chip ch-rank">RANK #${r.rank}</span>`:''}
-        </div>
-      </div>
-      <div class="src-body">${txt}</div>
-      <div class="src-foot">
-        <span>${config.model}</span><span>·</span>
-        <span>${r.response?r.response.split(' ').length+' words':'—'}</span>
-        ${r.competitorMentions?.length?`<span>·</span><span style="color:var(--purple)">Also: ${r.competitorMentions.join(', ')}</span>`:''}
-      </div>
-    </div>`;
-  }).join('');
-  setTimeout(()=>document.querySelectorAll('.src-item').forEach((el,i)=>setTimeout(()=>el.classList.add('vis'),i*35)),100);
-}
-
-function filterSources(){
-  const t=document.getElementById('f-src-type').value,c=document.getElementById('f-src-cat').value;
-  let d=results;
-  if(t==='branded')d=d.filter(r=>r.kwtype==='branded');
-  if(t==='nonbranded')d=d.filter(r=>r.kwtype==='nonbranded');
-  if(c!=='all')d=d.filter(r=>r.category===c);
-  renderSrcs(d);
-}
-
+function renderSrcs(data){const{brand,competitors}=config;const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');document.getElementById('sources-list').innerHTML=data.map(r=>{const idx=results.indexOf(r);let txt=r.response||'<em style="color:var(--text3)">No response</em>';txt=txt.replace(new RegExp(esc(brand),'gi'),`<span class="hl-b">${brand}</span>`);competitors.forEach(c=>{txt=txt.replace(new RegExp(esc(c),'gi'),`<span class="hl-c">${c}</span>`);});return`<div class="src-item" id="src-${idx}"><div class="src-head"><div class="src-q">${r.prompt}</div><div class="src-chips"><span class="chip ${r.kwtype==='nonbranded'?'ch-nb':'ch-cat'}" style="font-size:9px">${r.kwtype==='nonbranded'?'NON-BRANDED':'BRANDED'}</span><span class="chip ch-cat">${r.category}</span><span class="chip ${r.mentioned?'ch-yes':'ch-no'}">${r.mentioned?`✓ ${brand}`:'✗ not mentioned'}</span>${r.sentiment?`<span class="chip ch-${r.sentiment==='positive'?'pos':r.sentiment==='negative'?'neg':'neu'}">${r.sentiment.toUpperCase()}</span>`:''}${r.rank?`<span class="chip ch-rank">RANK #${r.rank}</span>`:''}</div></div><div class="src-body">${txt}</div><div class="src-foot"><span>${config.model}</span><span>·</span><span>${r.response?r.response.split(' ').length+' words':'—'}</span>${r.competitorMentions?.length?`<span>·</span><span style="color:var(--purple)">Also: ${r.competitorMentions.join(', ')}</span>`:''}</div></div>`;}).join('');setTimeout(()=>document.querySelectorAll('.src-item').forEach((el,i)=>setTimeout(()=>el.classList.add('vis'),i*35)),100);}
+function filterSources(){const t=document.getElementById('f-src-type').value,c=document.getElementById('f-src-cat').value;let d=results;if(t==='branded')d=d.filter(r=>r.kwtype==='branded');if(t==='nonbranded')d=d.filter(r=>r.kwtype==='nonbranded');if(c!=='all')d=d.filter(r=>r.category===c);renderSrcs(d);}
 function jumpSrc(idx){showTab('sources');setTimeout(()=>{const el=document.getElementById('src-'+idx);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},150);}
-function showTab(id){
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active');});
-}
-function resetToSetup(){
-  results=[];config={};
-  document.getElementById('dashboard').style.display='none';
-  document.getElementById('setup-screen').style.display='block';
-  document.getElementById('nav-badge').innerHTML='<span class="blink">◆</span>&nbsp;SYSTEM READY';
-  document.getElementById('nav-badge').className='status-badge badge-ready';
-}
+function showTab(id){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active');});}
+function resetToSetup(){results=[];config={};document.getElementById('dashboard').style.display='none';document.getElementById('setup-screen').style.display='flex';document.getElementById('nav-badge').innerHTML='<span class="blink">◆</span>&nbsp;SYSTEM READY';document.getElementById('nav-badge').className='status-badge badge-ready';}
 </script>
 </body>
 </html>
