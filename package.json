@@ -1,11 +1,10 @@
 
+
 {
   "name": "ai-visibility-radar-v3",
   "version": "3.0.0",
   "description": "AI Visibility RADAR — Brand Intelligence Platform v3",
   "private": true,
   "engines": { "node": "20.x" },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
-  }
+  "dependencies": {}
 }
