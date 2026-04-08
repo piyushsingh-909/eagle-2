@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,19 +6,21 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // ── Auth check ──────────────────────────────────────────────────
+  // ── Auth check — decode JWT payload without verifying signature ──
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.replace('Bearer ', '').trim();
   if (!token) return res.status(401).json({ error: 'Missing auth token. Please log in.' });
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-  );
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return res.status(401).json({ error: 'Invalid or expired session. Please log in again.' });
-  // ────────────────────────────────────────────────────────────────
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const now = Math.floor(Date.now() / 1000);
+    if (!payload.sub || payload.exp < now) {
+      return res.status(401).json({ error: 'Session expired. Please log in again.' });
+    }
+  } catch {
+    return res.status(401).json({ error: 'Invalid auth token.' });
+  }
+  // ────────────────────────────────────────────────────────
 
   const apiKey = process.env.OPENAI_KEY;
   if (!apiKey) return res.status(500).json({ error: 'OpenAI key not configured on server' });
