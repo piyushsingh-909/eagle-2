@@ -6,6 +6,25 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // ── Auth check — decode JWT payload without verifying signature ──
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace('Bearer ', '').trim();
+  if (!token) return res.status(401).json({ error: 'Missing auth token. Please log in.' });
+
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) throw new Error('malformed');
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    const now = Math.floor(Date.now() / 1000);
+    if (!payload.sub) return res.status(401).json({ error: 'Invalid auth token.' });
+    if (payload.exp < now) return res.status(401).json({ error: 'Session expired. Please log in again.' });
+    const expectedIssuer = 'https://fslmqeandokpkefscbif.supabase.co/auth/v1';
+    if (payload.iss !== expectedIssuer) return res.status(401).json({ error: 'Invalid auth token.' });
+  } catch {
+    return res.status(401).json({ error: 'Invalid auth token.' });
+  }
+  // ────────────────────────────────────────────────────────
+
   const apiKey = process.env.OPENAI_KEY;
   if (!apiKey) return res.status(500).json({ error: 'OpenAI key not configured on server' });
 
@@ -18,10 +37,7 @@ export default async function handler(req, res) {
   try {
     const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({
         model,
         messages: [
